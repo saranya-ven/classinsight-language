@@ -263,8 +263,9 @@ if __name__ == "__main__":
             turnx.calculate_utterance_durations(time_format)
             
         
-        save_to_json(period_object,json_folder+teacher_nick+"_"+period_id+".json")    
-        print "Created json file:",json_folder+teacher_nick+"_"+period_id+".json"
+        json_filename=json_folder+teacher_nick+"_"+period_id+".json"
+        save_to_json(period_object,json_filename)    
+        print "Created json file:",json_filename
         print
         
     for filename in filenames:
