@@ -93,6 +93,29 @@ def add_speaker(speaker_dict,speaker_id):
         speaker_dict[speaker_id]=new_speaker
     return speaker_dict
 
+def verify_timeformat(transcript_lines):
+    time_format="%H:%M:%S"
+    time_format2="%M:%S"
+    time_format3="%M:%S:00" #don-t know why this ever happens
+
+    for line in transcript_lines:
+        l_time=line[timestamp_label]
+        
+        if isTimeFormat(l_time, time_format):continue # all good :)
+        
+        elif isTimeFormat(l_time, time_format2): #if it is the short version
+            time_object=datetime.strptime(l_time,time_format2)
+            l_time=time_object.strftime(time_format)
+
+        elif isTimeFormat(l_time, time_format3): #if it-s Min:Sec:00
+            time_object=datetime.strptime(l_time,time_format3)
+            l_time=time_object.strftime(time_format)
+        
+        line[timestamp_label]=l_time
+    
+        
+            
+
     
 def split_speaking_turns(transcript_lines):
     current_turn=Speaking_Turn("no_speaking_turn")
@@ -113,7 +136,7 @@ def split_speaking_turns(transcript_lines):
         l_time=line[timestamp_label]
         if isTimeFormat(l_time,time_format): 
             last_valid_time=l_time
-        elif l_time!="":print line_number-1,l_time
+        elif l_time!="":print line_number-1,"__"+l_time+"__"
 
         
         l_utterance_type=get_utterance_type(line)
@@ -165,7 +188,10 @@ if __name__ == "__main__":
     
     csv_folder="transcripts/official_transcripts/2_CSV_Files/"
     json_folder="transcripts/official_transcripts/3_JSON_Files/"
-    filenames=["0205_Bill.csv","0205_Jeff.csv","0212_Caren.csv","0212_Evan.csv","0805_Tom.csv","190212_SaraPer2.csv","20190517_StephaniePer3.csv"]
+    #filenames=["0205_Bill.csv","0205_Jeff.csv","0212_Caren.csv","0212_Evan.csv","0805_Tom.csv","190212_SaraPer2.csv","20190517_StephaniePer3.csv"]
+
+    #PERSONAL NOTE: THE FOLLOWING FILES NEED TO BE TESTED MORE THOROUGHLY
+    filenames=["190429_Michell_ Per_5.csv","190501_Bonnie_Per_5.csv","190520_Sheila_Per_8.csv","20190502_Kim_Per6.csv","20190515_Bill_Per3.csv"]
 
     if buoyancy:
         csv_folder="transcripts/"
@@ -173,6 +199,7 @@ if __name__ == "__main__":
         filenames=["Buoyancy_Teacher.csv"]
         time_format="[%H:%M:%S;%f]"
     else:time_format="%H:%M:%S"
+        
 
     
     header= ['Speaker', 
@@ -236,6 +263,8 @@ if __name__ == "__main__":
             csvreader = csv.DictReader(csvfile, delimiter=",")
             for line in csvreader:
                 transcript_lines.append(line)    
+        
+        if not buoyancy:verify_timeformat(transcript_lines)
         
         turns=split_speaking_turns(transcript_lines)
         print "Turns split"
