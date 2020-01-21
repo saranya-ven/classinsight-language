@@ -2,10 +2,150 @@
 Created on Sep 5, 2019
 
 @author: jzc1104
+
+It takes a CSV file or directory with CSV files and converts it/them into JSON files
+
+This file results by putting together the files "read_input_file.py" and "data_structures.py"
+Apart from avoiding importing the Structures in data_structures.py, the method isTimeFormat() appears in both files, therefore only one copy is preserved here
+
 '''
 import csv, os
 from datetime import datetime
-from data_structures import Period,Participation_Segment,Speaking_Turn,Utterance,Speaker
+
+
+def calculate_duration_from_timestamps(init_timestamp,end_timestamp,time_format):
+    init_time=datetime.strptime(init_timestamp,time_format)
+    end_time=datetime.strptime(end_timestamp,time_format)
+    duration=end_time-init_time
+    return duration.total_seconds()
+
+def isTimeFormat(t_string,t_format):
+    try:
+        datetime.strptime(t_string,t_format)
+        return True
+    except ValueError:
+        return False
+    
+
+class Period :
+    def __init__(self,teacher,title,segments,time_format):
+        self.teacher=teacher
+        self.title=title
+        self.segments=segments
+        self.calculate_duration(time_format)
+        self.calculate_turns_cumulative_durations(time_format)
+        
+    def calculate_duration(self,time_format):
+        self.initial_time=self.segments[0].initial_time
+        self.end_time=self.segments[-1].end_time
+        self.duration=calculate_duration_from_timestamps(self.initial_time,self.end_time, time_format)
+        
+        
+    def calculate_turns_cumulative_durations(self,time_format):
+        for segment in self.segments:
+            for turn in segment.speaking_turns:
+                turn.calculate_cumulative_duration(self.initial_time,time_format)
+    
+class Participation_Segment:
+    def __init__(self,participation_type,speaking_turns=[]):
+        self.participation_type=participation_type
+        self.speaking_turns=speaking_turns
+    
+    def calculate_duration(self,time_format):
+        self.initial_time=self.speaking_turns[0].initial_time
+        self.end_time=self.speaking_turns[-1].end_time
+        self.duration=calculate_duration_from_timestamps(self.initial_time, self.end_time, time_format)
+    
+class Speaking_Turn:
+    def __init__(self,speaker_pseudo,utterances=[]):
+        self.speaker_pseudonym=speaker_pseudo
+        self.utterances=utterances
+        
+        
+    def do_time_calculations(self,time_format):
+        self.duration=calculate_duration_from_timestamps(self.initial_time,self.end_time, time_format)
+        self.total_tokens=sum([utt.n_tokens for utt in self.utterances])
+
+        if self.duration>0:
+            self.tokens_per_second=self.total_tokens/self.duration
+        else: self.tokens_per_second=0    
+        
+    def calculate_cumulative_duration(self,period_initial_time,time_format):
+        self.cumulative_duration=calculate_duration_from_timestamps(period_initial_time,self.end_time, time_format)
+        
+    def calculate_utterance_durations(self,time_format):
+        initial_time=self.cumulative_duration-self.duration#start of speaking turn
+    
+        #First we segment the utterances into chunks with a known initial and end timestamp
+        chunks=[]
+        current_chunk=[]
+        for utter in self.utterances:
+            if isTimeFormat(utter.timestamp,time_format):
+                if len(current_chunk)>0:chunks.append(current_chunk)
+                current_chunk=[utter]
+            else:current_chunk.append(utter)
+        chunks.append(current_chunk)
+        
+        #Having the chunks, determine the initial_time
+        chunks_start=[]
+        last_valid_time=initial_time
+        zero_time=datetime(1900,1,1)
+        for i,chunk in enumerate(chunks):
+            #print i,chunk
+            if i==0:# if it-s the first one
+                chunk_start=initial_time
+            elif isTimeFormat(chunk[0].timestamp,time_format):
+                chunk_start_timefull=datetime.strptime(chunk[0].timestamp,time_format)-zero_time
+                chunk_start=chunk_start_timefull.total_seconds()
+                last_valid_time=chunk_start
+            else:
+                print "invalid initial time",chunk[0].timestamp,last_valid_time,initial_time
+                chunk_start=last_valid_time
+            chunks_start.append((chunk,chunk_start))
+
+        #Then determine the end_time
+        chunks_start_end=[]
+        for i,chunk_st in enumerate(chunks_start):
+            if i==len(chunks)-1:
+                chunk_end=self.cumulative_duration
+            else: chunk_end=chunks_start[i+1][1]
+            chunks_start_end.append((chunk_st[0],chunk_st[1],chunk_end))
+               
+               
+        for (chunk,start,end) in chunks_start_end:
+            total_chunk_duration=end-start
+            total_chunk_tokens=sum([utt.n_tokens for utt in chunk])
+            if total_chunk_duration>0:tokens_per_sec=total_chunk_tokens/total_chunk_duration
+            else:tokens_per_sec=0
+            
+            cumulative_duration=start
+            for utt in chunk:
+                if tokens_per_sec>0:utt.duration=utt.n_tokens/tokens_per_sec
+                else: utt.duration=0
+                
+                cumulative_duration+=utt.duration
+                utt.cumulative_duration=cumulative_duration
+                utt.tokens_per_second=tokens_per_sec
+            #print len(chunk),start,end,total_chunk_duration,total_chunk_tokens,tokens_per_sec    
+                
+        
+        
+        
+class Utterance:
+    def __init__(self,line_number,utterance,utterance_type="none",time=""):
+        self.line_number=line_number
+        self.utterance=utterance
+        self.utterance_type=utterance_type
+        self.timestamp=time
+        self.n_tokens=len(self.utterance.split())
+        
+        
+class Speaker:
+    def __init__(self,pseudonym, speaker_type,periods=[]):
+        self.pseudonym=pseudonym
+        self.speaker_type=speaker_type
+        self.periods=periods
+
 
 
 def addheader_and_trimspaces(file_path_name,header):
@@ -29,14 +169,6 @@ def verify_speaker_format(speaker_string):
     if speaker_string.endswith(":"):
         speaker_string=speaker_string[:-1]
     return speaker_string
-
-    
-def isTimeFormat(t_string,t_format):
-    try:
-        datetime.strptime(t_string,t_format)
-        return True
-    except ValueError:
-        return False
 
 
 def save_to_json(object_instance,json_filename):
@@ -187,7 +319,6 @@ def get_filenames_in_dir(dir_path):
     print (filenames)
     return filenames
 
-
 if __name__ == "__main__":
     
     live=True
@@ -236,13 +367,15 @@ if __name__ == "__main__":
         #filenames=["0205_Bill.csv","0205_Jeff.csv","0212_Caren.csv","0212_Evan.csv","0805_Tom.csv","190212_Sara_Per_2.csv","20190517_Stephanie_Per_3.csv"]
         #filenames=["190429_Michelle_Per_5.csv","190501_Bonnie_Per_5.csv","190520_Sheila_Per_8.csv","20190502_Kim_Per6.csv","20190515_Bill_Per3.csv"]
     
-
+        
+        
    
     if buoyancy:
         csv_folder="transcripts/"
         json_folder="transcripts/"
         filenames=["Buoyancy_Teacher.csv"]
         time_format="[%H:%M:%S;%f]"
+
 
 
     
@@ -301,7 +434,8 @@ if __name__ == "__main__":
         period_date= filename_base[:-4].split("_")[0]
         extra_suffixes= "_".join(filename_base[:-4].split("_")[2:])
         
-        if csv_folder!="":file_name_path=csv_folder+"//"+filename_base
+        if csv_folder!="":
+            file_name_path=csv_folder+"//"+filename_base
         else:file_name_path=file_name
         
         print(file_name_path)
@@ -346,12 +480,10 @@ if __name__ == "__main__":
         json_filename+=".json"
         
         save_to_json(period_object,json_filename)    
-        print ("Created json file: "+json_filename+"\n")
-        
+        print ("Created json file: "+json_filename)
+        print ("")
         
     for filename in filenames:
         process_file(filename,header)
             
                 
-        
-    
