@@ -21,10 +21,11 @@ def isTimeFormat(t_string,t_format):
     
 
 class Period :
-    def __init__(self,teacher,title,segments,time_format):
+    def __init__(self,teacher,title,segments,time_format,original_csvfile):
         self.teacher=teacher
         self.title=title
         self.segments=segments
+        self.original_csv=original_csvfile
         self.calculate_duration(time_format)
         self.calculate_turns_cumulative_durations(time_format)
         
@@ -54,6 +55,12 @@ class Speaking_Turn:
         self.speaker_pseudonym=speaker_pseudo
         self.utterances=utterances
         
+        if "Teacher" in speaker_pseudo:
+            self.speaker_type="teacher"
+        elif "Student" in speaker_pseudo:
+            self.speaker_type="student"
+        else: self.speaker_type="other"
+        
         
     def do_time_calculations(self,time_format):
         self.duration=calculate_duration_from_timestamps(self.initial_time,self.end_time, time_format)
@@ -66,7 +73,8 @@ class Speaking_Turn:
     def calculate_cumulative_duration(self,period_initial_time,time_format):
         self.cumulative_duration=calculate_duration_from_timestamps(period_initial_time,self.end_time, time_format)
         
-    def calculate_utterance_durations(self,time_format):
+    def calculate_utterance_durations(self,time_format,period_initial_time):
+        #IT ASSUMES CUMULATIVE DURATION AND DURATIONS TO BE ALREADY SET
         initial_time=self.cumulative_duration-self.duration#start of speaking turn
     
         #First we segment the utterances into chunks with a known initial and end timestamp
@@ -82,29 +90,32 @@ class Speaking_Turn:
         #Having the chunks, determine the initial_time
         chunks_start=[]
         last_valid_time=initial_time
-        zero_time=datetime(1900,1,1)
+        zero_time=datetime.strptime(period_initial_time,time_format)
+        
         for i,chunk in enumerate(chunks):
             #print i,chunk
-            if i==0:# if it-s the first one
+            if i==0:# if it's the first one
                 chunk_start=initial_time
+                
             elif isTimeFormat(chunk[0].timestamp,time_format):
                 chunk_start_timefull=datetime.strptime(chunk[0].timestamp,time_format)-zero_time
                 chunk_start=chunk_start_timefull.total_seconds()
                 last_valid_time=chunk_start
+                
             else:
                 print "invalid initial time",chunk[0].timestamp,last_valid_time,initial_time
                 chunk_start=last_valid_time
+            
             chunks_start.append((chunk,chunk_start))
 
         #Then determine the end_time
         chunks_start_end=[]
         for i,chunk_st in enumerate(chunks_start):
-            if i==len(chunks)-1:
-                chunk_end=self.cumulative_duration
-            else: chunk_end=chunks_start[i+1][1]
+            if i==len(chunks)-1: chunk_end=self.cumulative_duration #if it's the last chunk, the end is the end of the turn
+            else: chunk_end=chunks_start[i+1][1] # if it's not the last one, the end is the beginning of next chunk
+            
             chunks_start_end.append((chunk_st[0],chunk_st[1],chunk_end))
-               
-               
+                      
         for (chunk,start,end) in chunks_start_end:
             total_chunk_duration=end-start
             total_chunk_tokens=sum([utt.n_tokens for utt in chunk])
