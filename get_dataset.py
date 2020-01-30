@@ -51,13 +51,23 @@ sentences_ = ["I am a sentence for which I would like to get its embedding.",
 
 
 
-def get_utterance_features(utterance_string,speaker_type,previous_speaker_type,particip_structure,utterance_types,original_csvname):
+def get_utterance_features(utt_complete):
+    
+    utterance_string=utt_complete[0]
+    speaker_type=utt_complete[1]
+    previous_speaker_type=utt_complete[2]
+    next_speaker_type=utt_complete[3]
+    particip_structure=utt_complete[4]
+    utterance_types= utt_complete[5]
+    first_utt_in_turn=utt_complete[6]
+    last_utt_in_turn=utt_complete[7]
+    original_csvname=utt_complete[8]
     
 
     
-    
     speaker_types=["teacher","student","other"]
     previous_speaker_types=["teacher","student","other","no_previous_speaker"]
+    next_speaker_types=["teacher","student","other","no_next_speaker"]
     participation_structures=['Whole class discussion', 'Lecture', 'Small group + Instructor',  'Individual Work', 'Pair Work', 'Other']
     utterance_types_general=['Turn-Taking Facilitation', 
              'Metacognitive Modeling Questions', 
@@ -77,9 +87,14 @@ def get_utterance_features(utterance_string,speaker_type,previous_speaker_type,p
     key_phrases=["Go ahead","go ahead","right?", "Right.","How many","How much"]
     
     
-    utterance_features=[original_csvname]
+    utterance_features=[original_csvname,utterance_string]
     
-    
+    #THESE ARE THE CLASSES WE ARE LOOKING FOR
+    for utt_type in utterance_types_general:
+        if utt_type in utterance_types: utterance_features.append(True)
+        else: utterance_features.append(False)
+
+    #FEATURES TO PREDICT THE CLASSES
     for sp_type in speaker_types:
         if sp_type == speaker_type:utterance_features.append(True)
         else: utterance_features.append(False)
@@ -88,13 +103,18 @@ def get_utterance_features(utterance_string,speaker_type,previous_speaker_type,p
         if sp_type == previous_speaker_type:utterance_features.append(True)
         else: utterance_features.append(False)
         
+    for sp_type in next_speaker_types:
+        if sp_type == next_speaker_type:utterance_features.append(True)
+        else: utterance_features.append(False)
+        
+    utterance_features.append(first_utt_in_turn)
+    utterance_features.append(last_utt_in_turn)
+    
     for part_structure in participation_structures:
         if part_structure== particip_structure:utterance_features.append(True)
         else: utterance_features.append(False)
         
-    for utt_type in utterance_types_general:
-        if utt_type in utterance_types: utterance_features.append(True)
-        else: utterance_features.append(False)
+
         
     #FEATURES RELATED TO THE STRING
     if len(utterance_string.split())>1: single_word=False
@@ -120,11 +140,14 @@ def get_utterance_features(utterance_string,speaker_type,previous_speaker_type,p
 if __name__ == "__main__":
     
     
+    output_csv_filename="dataset_all.csv"
+    
     json_folder="transcripts/official_transcripts/3_JSON_Files/"
     
     json_files=get_filenames_in_dir(json_folder,".json")
     #json_files=["Bonnie_20190508_per1.json"]
-    json_files=['Teacher_Buoyancy.json']
+    #json_files=['Teacher_Buoyancy.json']\
+    #json_files=['Michelle_20190507_per2.json']
     #json_files= ['Evan_20190515_Per3.json', 'Michelle_20190507_per2.json', 'Michelle_190429_Per_5.json', 'Bonnie_20190508_per3.json', 'Bill_20190515_Per3.json']
     #json_files= ['Jeff_0205.json', 'Evan_0212.json', 'Michelle_20190521_Per2.json', 'Kim_20190502_Per6.json', 'Henry_20190423_Per2.json'] 
                 #===============================================================
@@ -145,17 +168,23 @@ if __name__ == "__main__":
         
         
     utterances=[]
-    headers=["Original_CSV_File","Speaker_teacher","Speaker_student","Speaker_other","Previous_speaker_teacher","Previous_speaker_student","Previous_speaker_other","Previous_speaker_none",
+    headers=["Original_CSV_File","Utterance_String",
+             "Utt_Turn_Taking","Metacognitive_Modelling","Utt_Behavior","Utt_Teacher_OpenQ","Utt_Teacher_CloseQ","Utt_Student_OpenQ","Utt_Student_CloseQ","Utt_Student_CloseR","Utt_Student_OpenR","Utt_Student_ExpEvi",
+             "Speaker_teacher","Speaker_student","Speaker_other","Previous_speaker_teacher","Previous_speaker_student","Previous_speaker_other","Previous_speaker_none",
+             "Next_speaker_teacher","Next_speaker_student","Next_speaker_other","Next_speaker_none",
+             "first_utterance_in_turn","last_utterance_in_turn",
              "Part_Discussion","Part_Lecture","Part_Small_Group","Part_Individual","Part_Pairs","Part_Other",
-             "Utt_Turn_Taking","Utt_Behavior","Utt_Teacher_OpenQ","Utt_Teacher_CloseQ","Utt_Student_OpenQ","Utt_Student_CloseQ","Utt_Student_CloseR","Utt_Student_OpenR","Utt_Student_ExpEvi",
              "Single_Word",
              "what","What","why","Why","how","How","Is","do","Do","does","Does","can","Can","could","Could","where","Where","when","When",
              "QuestionMark","Student","Quotation","explain","Explain","right","no","No","yes","Yes","yeah","Yeah","because","Because",
-             "Go_ahead","go_ahead","right_questionmark", "Right_period","How_many","How_much",
-             "Embedding"
+             "Go_ahead","go_ahead","right_questionmark", "Right_period","How_many","How_much"
              ]
+    
+    embedding_dimensionality=512
+    for i in range(embedding_dimensionality):
+        headers.append("Embedding_"+str(i))
   
-    with open("dataset_buoyancy.csv","w+") as output_csv_file:
+    with open(output_csv_filename,"w+") as output_csv_file:
         dataset_writer = csv.writer(output_csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         dataset_writer.writerow(headers)
         
@@ -165,18 +194,42 @@ if __name__ == "__main__":
             utterances_period=[]
             
             first_speaker=True
-            for segment in period.segments:
-                #print "\t",segment.participation_type
+            for s,segment in enumerate(period.segments):
+                #print "\t",s,segment.participation_type
                 
-                for turn in segment.speaking_turns:
+                for t,turn in enumerate(segment.speaking_turns):
+                    
+                    if t ==len(segment.speaking_turns)-1: #If it's the last speaking turn in the segment
+                    
+                        if s==len(period.segments)-1: next_speaker_type="no_next_speaker" #if it's the last segment
+                        else: next_speaker_type=period.segments[s+1].speaking_turns[0].speaker_type #if there is another segment
+                    else: 
+                        next_speaker_type=segment.speaking_turns[t+1].speaker_type #if there is another turn, find out the type of the next speaker
+                        
+                    
                     if first_speaker:
                         previous_speaker_type="no_previous_speaker"
                         first_speaker=False
-                    #print "\t","\t",turn.speaker_pseudonym, turn.speaker_type,previous_speaker_type#, turn.initial_time, turn.end_time, turn.cumulative_duration, turn.duration, "seconds"    
-                    for utterance in turn.utterances:
-                        #print "\t","\t","\t",utterance.utterance
-                
-                        new_utt=[utterance.utterance, turn.speaker_type, previous_speaker_type, segment.participation_type, utterance.utterance_type,period.original_csv]
+                    #print "\t","\t",turn.speaker_pseudonym, turn.speaker_type,previous_speaker_type,next_speaker_type#, turn.initial_time, turn.end_time, turn.cumulative_duration, turn.duration, "seconds"    
+                    for u,utterance in enumerate(turn.utterances):
+                        
+                        first_utterance_in_Turn=False
+                        if u==0: first_utterance_in_Turn=True
+                        
+                        last_utterance_in_Turn=False
+                        if u == len(turn.utterances)-1:
+                            last_utterance_in_Turn=True
+                        
+                        #print "\t","\t","\t",utterance.utterance,first_utterance_in_Turn,last_utterance_in_Turn
+                        
+                        try:
+                            utterance.utterance.encode("utf-8")
+                        except UnicodeDecodeError, e:
+                            print e
+                        
+                        
+                        
+                        new_utt=[utterance.utterance, turn.speaker_type, previous_speaker_type,next_speaker_type, segment.participation_type, utterance.utterance_type,first_utterance_in_Turn,last_utterance_in_Turn,period.original_csv]
                         utterances.append(new_utt)
                         utterances_period.append(new_utt)
                     previous_speaker_type=turn.speaker_type
@@ -198,13 +251,21 @@ if __name__ == "__main__":
              
             for utt_complete,utt_embedding in zip(utterances_period,utterance_embeddings_period):
                  
-                print utt_complete[0]
-                utt_features=get_utterance_features(utt_complete[0],utt_complete[1],utt_complete[2],utt_complete[3],utt_complete[4],utt_complete[5])
-                utt_features.append(utt_embedding)
-                dataset_writer.writerow(utt_features)
+                #print period.original_csv,utt_complete[0]
+                utt_features=get_utterance_features(utt_complete)
+                for i in range(embedding_dimensionality):
+                    utt_features.append(utt_embedding[i])
+                
+                try:
+                    dataset_writer.writerow(utt_features)
+                except UnicodeEncodeError,e:
+                    print e
+                    utt_features[1]=utt_features[1].encode('utf-8')
+                    print utt_features[1]
+                    dataset_writer.writerow(utt_features)
                 
                 
-                print utt_features
+                #print utt_features
     
 #===============================================================================
 #          

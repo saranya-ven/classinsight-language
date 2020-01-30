@@ -118,7 +118,7 @@ def verify_timeformat(transcript_lines):
         line[timestamp_label]=l_time
     
         
-def split_speaking_turns(transcript_lines):
+def split_speaking_turns(transcript_lines,teacher_nickname):
     current_turn=Speaking_Turn("no_speaking_turn")
     current_participation_type="no_participation_type"
     speaking_turns=[]
@@ -130,6 +130,7 @@ def split_speaking_turns(transcript_lines):
     for line in transcript_lines:
         
         l_speaker=verify_speaker_format(line[speaker_label])
+        if l_speaker==teacher_nickname: l_speaker="Teacher"
         l_transcript=line[transcript_label]
         if l_transcript=="": continue
         
@@ -194,7 +195,7 @@ if __name__ == "__main__":
     
     live=True
     live=False
-    buoyancy=True
+    buoyancy=False
     time_format="%H:%M:%S"
     
     if live:
@@ -235,11 +236,9 @@ if __name__ == "__main__":
         json_folder="transcripts/official_transcripts/3_JSON_Files/2020"
         filenames=get_filenames_in_dir(csv_folder,".csv")
         
-        #=======================================================================
-        # csv_folder="transcripts/official_transcripts/2_CSV_Files/"
-        # json_folder="transcripts/official_transcripts/3_JSON_Files/"
-        # filenames=get_filenames_in_dir(csv_folder,".csv")
-        #=======================================================================
+        csv_folder="transcripts/official_transcripts/2_CSV_Files/"
+        json_folder="transcripts/official_transcripts/3_JSON_Files/"
+        filenames=get_filenames_in_dir(csv_folder,".csv")
          
         #=======================================================================
         # filenames=["0205_Bill.csv","0205_Jeff.csv","0212_Caren.csv","0212_Evan.csv","0805_Tom.csv","190212_Sara_Per_2.csv","20190517_Stephanie_Per_3.csv"]
@@ -327,7 +326,7 @@ if __name__ == "__main__":
         
         if not buoyancy:verify_timeformat(transcript_lines)
         
-        turns=split_speaking_turns(transcript_lines)
+        turns=split_speaking_turns(transcript_lines,teacher_nick)
         print ("Turns split")
         #=======================================================================
         # for (turn,part_type) in turns[:100]:
