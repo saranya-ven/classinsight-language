@@ -5,7 +5,7 @@ Created on Sep 5, 2019
 '''
 import csv, os
 from datetime import datetime
-from data_structures import Period,Participation_Segment,Speaking_Turn,Utterance,Speaker
+from data_structures import Period,Participation_Segment,Speaking_Turn,Utterance
 
 
 def save_to_json(object_instance,json_filename):
@@ -24,7 +24,7 @@ def get_filenames_in_dir(dir_path,file_extension):
     
     filenames = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
     filenames = [f for f in filenames if file_extension in f]
-    print (filenames)
+    print(filenames)
     return filenames
 
 def addheader_and_trimspaces(file_path_name,header):
@@ -87,15 +87,6 @@ def split_participation_segments(speaking_turns):
     segments.append(current_segment)
     return segments
 
-
-def add_speaker(speaker_dict,speaker_id):
-    if not speaker_dict.has_key(speaker_id):
-        if speaker_id=="Teacher": speaker_type="teacher"
-        else: speaker_type="student"
-        
-        new_speaker= Speaker(speaker_id,speaker_type)
-        speaker_dict[speaker_id]=new_speaker
-    return speaker_dict
 
 def verify_timeformat(transcript_lines):
     time_format="%H:%M:%S"
@@ -213,22 +204,22 @@ if __name__ == "__main__":
             filenames=[arguments.file]
             csv_folder=""
         elif arguments.inputdir:# if input directory is given
-            print ("Input directory: "+arguments.inputdir)
+            print("Input directory: "+arguments.inputdir)
             csv_folder=arguments.inputdir
             filenames=get_filenames_in_dir(csv_folder,".csv")
         else: #if no input file/directory is given, use current directory
             dirname, filename = os.path.split(os.path.abspath(__file__))
-            print ("Current directory taken as input directory:"+dirname)
+            print("Current directory taken as input directory:"+dirname)
             csv_folder=dirname 
             filenames=get_filenames_in_dir(csv_folder,".csv")
         
             
         if arguments.outputdir:
-            print ("Ouput directory: "+arguments.outputdir)
+            print("Ouput directory: "+arguments.outputdir)
             json_folder=arguments.outputdir
         else: 
             dirname, filename = os.path.split(os.path.abspath(__file__))
-            print ("Current directory taken as output directory:"+dirname)
+            print("Current directory taken as output directory:"+dirname)
             json_folder=dirname
         
     else:

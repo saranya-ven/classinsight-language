@@ -1,54 +1,14 @@
 """
 Created by jzc1104 on Jan 21 2020
 
-Takes a directory with JSON files created with the red_input_file script, and creates a dataset in order to do classification
+Takes a directory with JSON files created with the red_input_file script, and creates a dataset for classification
 
 """
-from read_input_file import get_filenames_in_dir
 import jsonpickle, csv
+
+from read_input_file import get_filenames_in_dir
+from sentence_embeddings import get_sentence_embeddings
 from nltk.tokenize import word_tokenize
-
-import tensorflow as tf
-import tensorflow_hub as hub
-import numpy as np
-
-module_url = "https://tfhub.dev/google/universal-sentence-encoder-large/3"
-embed = hub.Module(module_url)
-
-
-""" This function takes as input a list of sentences/one sentence at a time and returns a 512 length embedding from
-    Google's Universal Sentence Encoder pretrained module.
-
-    Input parameter: Un-processed string sentences in a list/one at a time.
-    For example inputs can be one of the following 2 types:
-    Type 1: List of string type sentences ->  sentences_ = ["I am a sentence for which I would like to get its embedding.",
-                        "Universal Sentence Encoder embeddings also support short paragraphs. ",
-                        "There is no hard limit on how long the paragraph is. Roughly, the longer ",
-                        "the more 'diluted' the embedding will be."]
-    Type 2: one string sentence at a time -> sentences_ = "This is a single sentence input."
-
-    Returns : Numpy array of dimension (n,512) where n is the number of sentences in input, and 512 is the embedding dimension
-"""
-def get_sentence_embedding(sentences):
-    if not isinstance(sentences,(list,)):
-        sentences = [sentences]
-    tf.logging.set_verbosity(tf.logging.ERROR)
-    with tf.Session() as session:
-        session.run([tf.global_variables_initializer(), tf.tables_initializer()])
-        sentence_embedding = session.run(embed(sentences))
-        return np.array(sentence_embedding)
-
-sentences_ = ["I am a sentence for which I would like to get its embedding.",
-            "Universal Sentence Encoder embeddings also support short paragraphs. ",
-            "There is no hard limit on how long the paragraph is. Roughly, the longer ",
-            "the more 'diluted' the embedding will be." ]
-
-# Can also try this as input -> Uncomment next line
-#sentences_ = "I am a sentence for which I would like to get its embedding."
-
-# function call
-#embeddings = get_sentence_embedding(sentences_)
-
 
 
 def get_utterance_features(utt_complete):
@@ -64,7 +24,6 @@ def get_utterance_features(utt_complete):
     original_csvname=utt_complete[8]
     
 
-    
     speaker_types=["teacher","student","other"]
     previous_speaker_types=["teacher","student","other","no_previous_speaker"]
     next_speaker_types=["teacher","student","other","no_next_speaker"]
@@ -121,8 +80,14 @@ def get_utterance_features(utt_complete):
     else: single_word=True
     utterance_features.append(single_word)
 
-    utterance_tokenized=word_tokenize(utterance_string)
+    if type(utterance_string)!=str:
+        print (utterance_string)
+        print (type(utterance_string))
     
+        print ("encoding error")
+        utterance_string=utterance_string.decode("utf-8",errors='ignore')
+        
+    utterance_tokenized=word_tokenize(utterance_string)
     for word in question_words:
         if word in utterance_tokenized:utterance_features.append(True)
         else: utterance_features.append(False)
@@ -139,10 +104,13 @@ def get_utterance_features(utt_complete):
 
 if __name__ == "__main__":
     
+    embedding_model="50"
+    embedding_dimensionality=50
     
-    output_csv_filename="dataset_all.csv"
+    output_csv_filename="dataset_all_"+embedding_model+"dim.csv"
     
     json_folder="transcripts/official_transcripts/3_JSON_Files/"
+    datasets_folder="transcripts/official_transcripts/4_Datasets/"
     
     json_files=get_filenames_in_dir(json_folder,".json")
     #json_files=["Bonnie_20190508_per1.json"]
@@ -180,17 +148,17 @@ if __name__ == "__main__":
              "Go_ahead","go_ahead","right_questionmark", "Right_period","How_many","How_much"
              ]
     
-    embedding_dimensionality=512
+
     for i in range(embedding_dimensionality):
         headers.append("Embedding_"+str(i))
   
-    with open(output_csv_filename,"w+") as output_csv_file:
+    with open(datasets_folder+output_csv_filename,"w+") as output_csv_file:
         dataset_writer = csv.writer(output_csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         dataset_writer.writerow(headers)
         
         for period in all_periods:
             print
-            print period.original_csv
+            print (period.original_csv)
             utterances_period=[]
             
             first_speaker=True
@@ -222,13 +190,6 @@ if __name__ == "__main__":
                         
                         #print "\t","\t","\t",utterance.utterance,first_utterance_in_Turn,last_utterance_in_Turn
                         
-                        try:
-                            utterance.utterance.encode("utf-8")
-                        except UnicodeDecodeError, e:
-                            print e
-                        
-                        
-                        
                         new_utt=[utterance.utterance, turn.speaker_type, previous_speaker_type,next_speaker_type, segment.participation_type, utterance.utterance_type,first_utterance_in_Turn,last_utterance_in_Turn,period.original_csv]
                         utterances.append(new_utt)
                         utterances_period.append(new_utt)
@@ -247,21 +208,22 @@ if __name__ == "__main__":
             
                     
             only_utts_period=[utt[0] for utt in utterances_period]
-            utterance_embeddings_period=get_sentence_embedding(only_utts_period)
+            utterance_embeddings_period=get_sentence_embeddings(only_utts_period,embedding_model)
              
             for utt_complete,utt_embedding in zip(utterances_period,utterance_embeddings_period):
                  
                 #print period.original_csv,utt_complete[0]
+                
                 utt_features=get_utterance_features(utt_complete)
                 for i in range(embedding_dimensionality):
                     utt_features.append(utt_embedding[i])
                 
                 try:
                     dataset_writer.writerow(utt_features)
-                except UnicodeEncodeError,e:
-                    print e
+                except UnicodeEncodeError as e:
+                    print (e)
                     utt_features[1]=utt_features[1].encode('utf-8')
-                    print utt_features[1]
+                    print (utt_features[1])
                     dataset_writer.writerow(utt_features)
                 
                 

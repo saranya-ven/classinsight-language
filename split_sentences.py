@@ -2,6 +2,9 @@
 Created on Oct 14, 2019
 
 @author: jzc1104
+
+Splits paragraphs into sentences
+
 '''
 separator="\t"
 
@@ -41,7 +44,7 @@ if __name__ == '__main__':
     
         for line in csvreader:
             if line[timestamp_tag]=="" and line[speaker_tag]=="" and line[transcript_tag]=="":continue
-            print line[transcript_tag]
+            print(line[transcript_tag])
             sents=nltk.tokenize.sent_tokenize(line[transcript_tag])
             
             line[speaker_tag]=line[speaker_tag][:-1] #Speaker field always ends with ":", here we remove it

@@ -11,16 +11,14 @@ Apart from avoiding importing the Structures in data_structures.py, the method i
 The initial part where pip is imported and some packages are installed appears only in this file
 
 '''
-#import csv, os
+import pip,os
 from datetime import datetime
 
-import pip
-
-pkgs = ['csv', 'os','jsonpickle','json']
+pkgs = ['csv','jsonpickle','json']
 for package in pkgs:
     try:
         import package
-    except ImportError, e:
+    except ImportError as e:
         print (e)
         pip.main(['install', package])
 
@@ -121,7 +119,7 @@ class Speaking_Turn:
                 last_valid_time=chunk_start
                 
             else:
-                print "invalid initial time",chunk[0].timestamp,last_valid_time,initial_time
+                print ("invalid initial time",chunk[0].timestamp,last_valid_time,initial_time)
                 chunk_start=last_valid_time
             
             chunks_start.append((chunk,chunk_start))

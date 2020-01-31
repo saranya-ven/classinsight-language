@@ -103,7 +103,7 @@ class Speaking_Turn:
                 last_valid_time=chunk_start
                 
             else:
-                print "invalid initial time",chunk[0].timestamp,last_valid_time,initial_time
+                print ("invalid initial time",chunk[0].timestamp,last_valid_time,initial_time)
                 chunk_start=last_valid_time
             
             chunks_start.append((chunk,chunk_start))
@@ -143,9 +143,3 @@ class Utterance:
         self.timestamp=time
         self.n_tokens=len(self.utterance.split())
         
-        
-class Speaker:
-    def __init__(self,pseudonym, speaker_type,periods=[]):
-        self.pseudonym=pseudonym
-        self.speaker_type=speaker_type
-        self.periods=periods

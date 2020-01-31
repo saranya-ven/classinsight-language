@@ -6,8 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression 
 from sklearn.metrics import accuracy_score,f1_score,recall_score,precision_score,confusion_matrix
 
-dataset = pd.read_csv('dataset_all.csv') 
-
+dataset_path="transcripts/official_transcripts/4_Datasets/dataset_all_50dim.csv"
+dataset = pd.read_csv(dataset_path) 
 
 headers=["Original_CSV_File","Utterance_String",
          "Utt_Turn_Taking",#2
@@ -37,14 +37,11 @@ for i in range(embedding_dimensionality):
 
 #===============================================================================
 # for i,elem in enumerate(headers):
-#     print i, elem
-# print headers[12:71]
+#     print(i, elem)
 #===============================================================================
 
-
-
 #x = dataset.iloc[:, 12:71].values
-x= dataset.iloc[:,12:583].values
+x= dataset.iloc[:,12:71+embedding_dimensionality].values
 
 for var_index in range(2,12):
     y = dataset.iloc[:, var_index].values 
@@ -55,13 +52,13 @@ for var_index in range(2,12):
 
     y_pred = classifier.predict(xtest) 
         
-    print "Utt Type: ",headers[var_index]
-    print "Confusion Matrix : \n", confusion_matrix(ytest, y_pred) 
-    print "Accuracy : ", accuracy_score(ytest, y_pred)
-    print "Precision: ", precision_score(ytest, y_pred)
-    print "Recall   : ", recall_score(ytest, y_pred)
-    print "F1       : ", f1_score(ytest, y_pred)
-    print
+    print("Utt Type: ",headers[var_index])
+    print("Confusion Matrix : \n", confusion_matrix(ytest, y_pred)) 
+    print("Accuracy : ", accuracy_score(ytest, y_pred))
+    print("Precision: ", precision_score(ytest, y_pred))
+    print("Recall   : ", recall_score(ytest, y_pred))
+    print("F1       : ", f1_score(ytest, y_pred))
+    print()
 
 #===============================================================================
 # utts=dataset.iloc[:,1].values
@@ -72,11 +69,11 @@ for var_index in range(2,12):
 # for utt,teach,stud_nam,x_elem,y_elem,file_n in zip(utts,teacher_sp,student_naming,x,y,filenames):
 #     prediction=classifier.predict([x_elem])
 #     if prediction!=y_elem :
-#         print utt,file_n,teach,stud_nam,y_elem,prediction
+#         print (utt,file_n,teach,stud_nam,y_elem,prediction)
 #     
 #     
 #     if prediction==y_elem and prediction==True :
-#         print "\t",utt,file_n,teach,stud_nam,y_elem,prediction
+#         print ("\t",utt,file_n,teach,stud_nam,y_elem,prediction)
 #===============================================================================
         
         
