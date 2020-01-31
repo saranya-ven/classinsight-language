@@ -1,22 +1,22 @@
 '''
 Created on Sep 5, 2019
 
+
 @author: jzc1104
 '''
 import csv, os
 from datetime import datetime
-from data_structures import Period,Participation_Segment,Speaking_Turn,Utterance,Speaker
+from data_structures import Period,Participation_Segment,Speaking_Turn,Utterance
 
 
-def save_to_json(object_instance,json_filename):
-    import jsonpickle,json
-    json_string=jsonpickle.encode(object_instance)
-    parsed = json.loads(json_string)
-    json_string_formatted=json.dumps(parsed, indent=4, sort_keys=True)
-    
-    output_file=open(json_filename,"w+")
-    output_file.write(json_string_formatted)
-    output_file.close()
+def isTimeFormat(t_string,t_format):
+    try:
+        datetime.strptime(t_string,t_format)
+        return True
+    except ValueError:
+        return False
+
+
     
 def get_filenames_in_dir(dir_path,file_extension):
     from os import listdir
@@ -24,21 +24,27 @@ def get_filenames_in_dir(dir_path,file_extension):
     
     filenames = [f for f in listdir(dir_path) if isfile(join(dir_path, f))]
     filenames = [f for f in filenames if file_extension in f]
-    print (filenames)
+    print(filenames)
     return filenames
 
 def addheader_and_trimspaces(file_path_name,header):
     lines=[]
-    with open(file_path_name) as csvfile:
+    
+    file_basename=os.path.basename(file_path_name)
+    file_path=os.path.dirname(file_path_name)
+    
+    
+    with open(file_path_name, encoding = 'unicode_escape') as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
-        _=next(reader)#we ignore the header in the file, and use our own
+        orig_header=next(reader)#we ignore the header in the file, and use our own
+        
         lines.append(header)
         
         for row in reader:
             row_strip=[column_content.strip() for column_content in row]
             lines.append(row_strip)
     
-    with open(file_path_name,"w+")  as csvfile:
+    with open(file_path+"/mod_"+file_basename,"w+",encoding = 'utf-8')  as csvfile:
         writer=csv.writer(csvfile,delimiter=",")
         for row in lines:
             writer.writerow(row)
@@ -48,54 +54,6 @@ def verify_speaker_format(speaker_string):
     if speaker_string.endswith(":"):
         speaker_string=speaker_string[:-1]
     return speaker_string
-
-    
-def isTimeFormat(t_string,t_format):
-    try:
-        datetime.strptime(t_string,t_format)
-        return True
-    except ValueError:
-        return False
-
-
-
-            
-
-def get_line_participation_type(line_dict):
-    for part_type in participation_types:
-        if line_dict[part_type]=="1" or line_dict[part_type]==1:
-            return part_type
-    return "none"
-   
-def get_utterance_type(line_dict):
-    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
-    return types
-    
-    
-def split_participation_segments(speaking_turns):
-    current_segment=Participation_Segment("no_segment")
-    segments=[]
-        
-    for (turn,participation_type) in speaking_turns:
-        if participation_type!=current_segment.participation_type:
-            
-            if current_segment.participation_type!="no_segment":segments.append(current_segment)
-            current_segment=Participation_Segment(participation_type,[turn])
-        
-        else:current_segment.speaking_turns.append(turn)
-    
-    segments.append(current_segment)
-    return segments
-
-
-def add_speaker(speaker_dict,speaker_id):
-    if not speaker_dict.has_key(speaker_id):
-        if speaker_id=="Teacher": speaker_type="teacher"
-        else: speaker_type="student"
-        
-        new_speaker= Speaker(speaker_id,speaker_type)
-        speaker_dict[speaker_id]=new_speaker
-    return speaker_dict
 
 def verify_timeformat(transcript_lines):
     time_format="%H:%M:%S"
@@ -116,6 +74,35 @@ def verify_timeformat(transcript_lines):
             l_time=time_object.strftime(time_format)
         
         line[timestamp_label]=l_time
+
+def get_line_participation_type(line_dict):
+    for part_type in participation_types:
+        if line_dict[part_type]=="1" or line_dict[part_type]==1:
+            return part_type
+    return "none"
+   
+def get_utterance_types(line_dict):
+    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
+    return types
+    
+    
+def split_participation_segments(speaking_turns):
+    current_segment=Participation_Segment("no_segment")
+    segments=[]
+        
+    for (turn,participation_type) in speaking_turns:
+        if participation_type!=current_segment.participation_type:
+            
+            if current_segment.participation_type!="no_segment":segments.append(current_segment)
+            current_segment=Participation_Segment(participation_type,[turn])
+        
+        else:current_segment.speaking_turns.append(turn)
+    
+    segments.append(current_segment)
+    return segments
+
+
+
     
         
 def split_speaking_turns(transcript_lines,teacher_nickname):
@@ -140,7 +127,7 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
         elif l_time!="":print ("invalid time at line:"+str(line_number)+"__"+l_time+"__")
 
         
-        l_utterance_type=get_utterance_type(line)
+        l_utterance_type=get_utterance_types(line)
         l_participation_type=get_line_participation_type(line)
         if l_participation_type=="none":
             print (str(line_number)+" no participation type")
@@ -184,8 +171,8 @@ def divide_turns_by_interval(turn,interval_size=300):
     initial_seconds=int(turn.cumulative_duration-turn.duration)
     end_seconds=int(turn.cumulative_duration)
     
-    initial_interval=initial_seconds/interval_size
-    end_interval=end_seconds/interval_size
+    initial_interval=int(initial_seconds/interval_size)
+    end_interval=int(end_seconds/interval_size)
 
     return range(initial_interval,end_interval+1)
         
@@ -213,22 +200,22 @@ if __name__ == "__main__":
             filenames=[arguments.file]
             csv_folder=""
         elif arguments.inputdir:# if input directory is given
-            print ("Input directory: "+arguments.inputdir)
+            print("Input directory: "+arguments.inputdir)
             csv_folder=arguments.inputdir
             filenames=get_filenames_in_dir(csv_folder,".csv")
         else: #if no input file/directory is given, use current directory
             dirname, filename = os.path.split(os.path.abspath(__file__))
-            print ("Current directory taken as input directory:"+dirname)
+            print("Current directory taken as input directory:"+dirname)
             csv_folder=dirname 
             filenames=get_filenames_in_dir(csv_folder,".csv")
         
             
         if arguments.outputdir:
-            print ("Ouput directory: "+arguments.outputdir)
+            print("Ouput directory: "+arguments.outputdir)
             json_folder=arguments.outputdir
         else: 
             dirname, filename = os.path.split(os.path.abspath(__file__))
-            print ("Current directory taken as output directory:"+dirname)
+            print("Current directory taken as output directory:"+dirname)
             json_folder=dirname
         
     else:
@@ -239,6 +226,8 @@ if __name__ == "__main__":
         csv_folder="transcripts/official_transcripts/2_CSV_Files/"
         json_folder="transcripts/official_transcripts/3_JSON_Files/"
         filenames=get_filenames_in_dir(csv_folder,".csv")
+        
+
          
         #=======================================================================
         # filenames=["0205_Bill.csv","0205_Jeff.csv","0212_Caren.csv","0212_Evan.csv","0805_Tom.csv","190212_Sara_Per_2.csv","20190517_Stephanie_Per_3.csv"]
@@ -316,36 +305,27 @@ if __name__ == "__main__":
         
         print(file_name_path)
         
+        #This part creates an auxiliary file: mod_+originalfilename
         addheader_and_trimspaces(file_name_path,header)
-    
         transcript_lines=[]
-        with open(file_name_path) as csvfile:
+        with open(csv_folder+"/mod_"+filename_base,encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=",")
             for line in csvreader:
-                transcript_lines.append(line)    
+                transcript_lines.append(line)   
+        #Here we remove the auxiliary file
+        os.remove(csv_folder+"/mod_"+filename_base) 
         
         if not buoyancy:verify_timeformat(transcript_lines)
         
         turns=split_speaking_turns(transcript_lines,teacher_nick)
         print ("Turns split")
-        #=======================================================================
-        # for (turn,part_type) in turns[:100]:
-        #     print turn.speaker_pseudonym
-        #     print turn.initial_time
-        #     print turn.end_time
-        #     print turn.duration
-        #     print turn.total_tokens
-        #     print turn.tokens_per_second
-        #     for utterance in turn.utterances:
-        #         print "\t",utterance.line_number,utterance.utterance_type,utterance.utterance
-        #=======================================================================
         
         class_segments=split_participation_segments(turns)
         for segment in class_segments:segment.calculate_duration(time_format)
         print ("Participation Segments split")
         
-        period_object=Period(teacher_nick,period_date,class_segments,time_format,filename_base)
-         
+        period_object=Period(teacher_nick,period_date,class_segments,time_format,filename_base) 
+        #period object needs to be created before the following because the period object triggers the calculation of turn durations         
         for (turnx,_) in turns:
             turnx.interval_5min=divide_turns_by_interval(turnx, 300)
             turnx.interval_10min=divide_turns_by_interval(turnx, 600)
@@ -354,9 +334,8 @@ if __name__ == "__main__":
         json_filename=json_folder+"/"+teacher_nick+"_"+period_date
         if extra_suffixes!="":json_filename+="_"+extra_suffixes
         json_filename+=".json"
-        
-        save_to_json(period_object,json_filename)    
-        print ("Created json file: "+json_filename+"\n")
+        period_object.save_to_json(json_filename)    
+        print("Created json file: "+json_filename+"\n")
         
         
     for filename in filenames:

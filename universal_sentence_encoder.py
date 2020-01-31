@@ -56,6 +56,6 @@ embeddings = get_sentence_embedding(sentences_)
 
 print("Shape of output/embeddings array", embeddings.shape)
 for sent_emb in embeddings:
-    print sent_emb
+    print (sent_emb)
 
 

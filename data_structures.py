@@ -1,6 +1,8 @@
 '''
 Created on Sep 24, 2019
 
+Contains the datastructures necessary to contain the information
+
 @author: jzc1104
 '''
 from datetime import datetime
@@ -21,6 +23,9 @@ def isTimeFormat(t_string,t_format):
     
 
 class Period :
+    '''
+    Container for a single lesson. Each lesson is divided into participation SEGMENTS, where each segment can be e.g. Lecture, or Whole-class discussion
+    '''
     def __init__(self,teacher,title,segments,time_format,original_csvfile):
         self.teacher=teacher
         self.title=title
@@ -39,8 +44,27 @@ class Period :
         for segment in self.segments:
             for turn in segment.speaking_turns:
                 turn.calculate_cumulative_duration(self.initial_time,time_format)
+    def print_me(self):
+        print(self.teacher,self.title,self.original_csv)
+        print(self.initial_time,self.end_time)
+        for seg in self.segments:
+            seg.print_me()
+            
+    def save_to_json(self,json_filename):
+        import jsonpickle,json
+        json_string=jsonpickle.encode(self)
+        parsed = json.loads(json_string)
+        json_string_formatted=json.dumps(parsed, indent=4, sort_keys=True)
+        
+        output_file=open(json_filename,"w+")
+        output_file.write(json_string_formatted)
+        output_file.close()
     
 class Participation_Segment:
+    '''
+    Each segment in which a lesson is divided according to diverse pedagogical goals. Composed by speaking turns
+    '''
+    
     def __init__(self,participation_type,speaking_turns=[]):
         self.participation_type=participation_type
         self.speaking_turns=speaking_turns
@@ -49,8 +73,16 @@ class Participation_Segment:
         self.initial_time=self.speaking_turns[0].initial_time
         self.end_time=self.speaking_turns[-1].end_time
         self.duration=calculate_duration_from_timestamps(self.initial_time, self.end_time, time_format)
+                
+    def print_me(self,prefix=""):
+        print(prefix,self.participation_type,self.initial_time,self.end_time)
+        for speak_turn in self.speaking_turns:
+            speak_turn.print_me(prefix+"\t")
     
 class Speaking_Turn:
+    '''
+    Within the same participation segment, a turn refers to all the utterances produced consecutively by the same speaker
+    '''
     def __init__(self,speaker_pseudo,utterances=[]):
         self.speaker_pseudonym=speaker_pseudo
         self.utterances=utterances
@@ -60,6 +92,11 @@ class Speaking_Turn:
         elif "Student" in speaker_pseudo:
             self.speaker_type="student"
         else: self.speaker_type="other"
+    
+    def print_me(self,prefix=""):
+        print(prefix,self.speaker_pseudonym,self.speaker_type,self.initial_time,self.end_time)
+        for utt in self.utterances:
+            utt.print_me(prefix+"\t")
         
         
     def do_time_calculations(self,time_format):
@@ -103,7 +140,7 @@ class Speaking_Turn:
                 last_valid_time=chunk_start
                 
             else:
-                print "invalid initial time",chunk[0].timestamp,last_valid_time,initial_time
+                print ("invalid initial time",chunk[0].timestamp,last_valid_time,initial_time)
                 chunk_start=last_valid_time
             
             chunks_start.append((chunk,chunk_start))
@@ -143,9 +180,7 @@ class Utterance:
         self.timestamp=time
         self.n_tokens=len(self.utterance.split())
         
+    def print_me(self,prefix=""):
+        print (prefix,self.line_number,self.utterance,self.utterance_type)    
+    
         
-class Speaker:
-    def __init__(self,pseudonym, speaker_type,periods=[]):
-        self.pseudonym=pseudonym
-        self.speaker_type=speaker_type
-        self.periods=periods
