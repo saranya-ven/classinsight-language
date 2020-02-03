@@ -152,7 +152,11 @@ if __name__ == "__main__":
     for i in range(embedding_dimensionality):
         headers.append("Embedding_"+str(i))
   
+<<<<<<< HEAD
     with open(datasets_folder+output_csv_filename,"w+",encoding="utf-8") as output_csv_file:
+=======
+    with open(datasets_folder+output_csv_filename,"w+") as output_csv_file:
+>>>>>>> branch 'master' of https://github.com/iesus/classinsight-language.git
         dataset_writer = csv.writer(output_csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         dataset_writer.writerow(headers)
         

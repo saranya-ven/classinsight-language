@@ -180,7 +180,10 @@ class Utterance:
         self.timestamp=time
         self.n_tokens=len(self.utterance.split())
         
+<<<<<<< HEAD
     def print_me(self,prefix=""):
         print (prefix,self.line_number,self.utterance,self.utterance_type)    
     
         
+=======
+>>>>>>> branch 'master' of https://github.com/iesus/classinsight-language.git
