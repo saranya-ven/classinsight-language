@@ -1,11 +1,8 @@
-<<<<<<< HEAD
 '''
 Taken from:
     https://github.com/saranya132/pretrained_sent_embeddings
 '''
-=======
-  
->>>>>>> branch 'master' of https://github.com/iesus/classinsight-language.git
+
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
