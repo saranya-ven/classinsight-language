@@ -55,26 +55,8 @@ def verify_speaker_format(speaker_string):
         speaker_string=speaker_string[:-1]
     return speaker_string
 
-<<<<<<< HEAD
-=======
-    
-def isTimeFormat(t_string,t_format):
-    try:
-        datetime.strptime(t_string,t_format)
-        return True
-    except ValueError:
-        return False
-
-
-
             
 
-def get_line_participation_type(line_dict):
-    for part_type in participation_types:
-        if line_dict[part_type]=="1" or line_dict[part_type]==1:
-            return part_type
-    return "none"
-   
 def get_utterance_type(line_dict):
     types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
     return types
@@ -96,7 +78,6 @@ def split_participation_segments(speaking_turns):
     return segments
 
 
->>>>>>> branch 'master' of https://github.com/iesus/classinsight-language.git
 def verify_timeformat(transcript_lines):
     time_format="%H:%M:%S"
     time_format2="%M:%S"

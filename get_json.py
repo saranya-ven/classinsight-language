@@ -10,24 +10,9 @@ This file results by putting together the files "read_input_file.py" and "data_s
 Apart from avoiding importing the Structures in data_structures.py, the method isTimeFormat() appears in both files, so only one copy is preserved here
 
 '''
-<<<<<<< HEAD
+
 import os,csv,jsonpickle,json
-=======
-import pip,os
->>>>>>> branch 'master' of https://github.com/iesus/classinsight-language.git
 from datetime import datetime
-
-<<<<<<< HEAD
-=======
-pkgs = ['csv','jsonpickle','json']
-for package in pkgs:
-    try:
-        import package
-    except ImportError as e:
-        print (e)
-        pip.main(['install', package])
-
->>>>>>> branch 'master' of https://github.com/iesus/classinsight-language.git
 
 def calculate_duration_from_timestamps(init_timestamp,end_timestamp,time_format):
     init_time=datetime.strptime(init_timestamp,time_format)
