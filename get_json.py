@@ -197,17 +197,22 @@ def addheader_and_trimspaces(file_path_name,header):
     
     with open(file_path_name, encoding = 'unicode_escape') as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
-        _=next(reader)#we ignore the header in the file, and use our own
+        orig_header=next(reader)#we ignore the header in the file, and use our own
+        
         lines.append(header)
         
         for row in reader:
             row_strip=[column_content.strip() for column_content in row]
             lines.append(row_strip)
     
-    with open(file_path+"/mod_"+file_basename,"w+",encoding = 'utf-8')  as csvfile:
+    aux_filename=file_path+"/mod_"+file_basename
+    with open(aux_filename,"w+",encoding = 'utf-8')  as csvfile:
         writer=csv.writer(csvfile,delimiter=",")
         for row in lines:
             writer.writerow(row)
+            
+    return aux_filename
+            
             
          
 def verify_speaker_format(speaker_string):
@@ -465,14 +470,14 @@ if __name__ == "__main__":
         print(file_name_path)
         
         #This part creates an auxiliary file: mod_+originalfilename
-        addheader_and_trimspaces(file_name_path,header)
+        aux_filename=addheader_and_trimspaces(file_name_path,header)
         transcript_lines=[]
-        with open(csv_folder+"/mod_"+filename_base,encoding="utf-8") as csvfile:
+        with open(aux_filename,encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=",")
             for line in csvreader:
                 transcript_lines.append(line)   
         #Here we remove the auxiliary file
-        os.remove(csv_folder+"/mod_"+filename_base) 
+        os.remove(aux_filename) 
         
         if not buoyancy:verify_timeformat(transcript_lines)
         
@@ -500,5 +505,5 @@ if __name__ == "__main__":
     for filename in filenames:
         process_file(filename,header)
             
-            
+                
                 

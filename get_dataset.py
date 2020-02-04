@@ -107,9 +107,9 @@ if __name__ == "__main__":
     embedding_model="50"
     embedding_dimensionality=50
     
-    output_csv_filename="dataset_all_"+embedding_model+"dim.csv"
+    output_csv_filename="dataset_2020_"+embedding_model+"dim.csv"
     
-    json_folder="transcripts/official_transcripts/3_JSON_Files/"
+    json_folder="transcripts/official_transcripts/3_JSON_Files/2020/"
     datasets_folder="transcripts/official_transcripts/4_Datasets/"
     
     json_files=get_filenames_in_dir(json_folder,".json")
@@ -152,7 +152,9 @@ if __name__ == "__main__":
     for i in range(embedding_dimensionality):
         headers.append("Embedding_"+str(i))
     
-    with open(datasets_folder+output_csv_filename,"w+",encoding="utf-8") as output_csv_file:
+    #,encoding="utf-8"
+    
+    with open(datasets_folder+output_csv_filename,"w+") as output_csv_file:
 
         dataset_writer = csv.writer(output_csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
         dataset_writer.writerow(headers)

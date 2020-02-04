@@ -44,10 +44,13 @@ def addheader_and_trimspaces(file_path_name,header):
             row_strip=[column_content.strip() for column_content in row]
             lines.append(row_strip)
     
-    with open(file_path+"/mod_"+file_basename,"w+",encoding = 'utf-8')  as csvfile:
+    aux_filename=file_path+"/mod_"+file_basename
+    with open(aux_filename,"w+",encoding = 'utf-8')  as csvfile:
         writer=csv.writer(csvfile,delimiter=",")
         for row in lines:
             writer.writerow(row)
+            
+    return aux_filename
             
          
 def verify_speaker_format(speaker_string):
@@ -246,9 +249,11 @@ if __name__ == "__main__":
         json_folder="transcripts/official_transcripts/3_JSON_Files/2020"
         filenames=get_filenames_in_dir(csv_folder,".csv")
         
-        csv_folder="transcripts/official_transcripts/2_CSV_Files/"
-        json_folder="transcripts/official_transcripts/3_JSON_Files/"
-        filenames=get_filenames_in_dir(csv_folder,".csv")
+        #=======================================================================
+        # csv_folder="transcripts/official_transcripts/2_CSV_Files/"
+        # json_folder="transcripts/official_transcripts/3_JSON_Files/"
+        # filenames=get_filenames_in_dir(csv_folder,".csv")
+        #=======================================================================
         
 
          
@@ -329,14 +334,14 @@ if __name__ == "__main__":
         print(file_name_path)
         
         #This part creates an auxiliary file: mod_+originalfilename
-        addheader_and_trimspaces(file_name_path,header)
+        aux_filename=addheader_and_trimspaces(file_name_path,header)
         transcript_lines=[]
-        with open(csv_folder+"/mod_"+filename_base,encoding="utf-8") as csvfile:
+        with open(aux_filename,encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=",")
             for line in csvreader:
                 transcript_lines.append(line)   
         #Here we remove the auxiliary file
-        os.remove(csv_folder+"/mod_"+filename_base) 
+        os.remove(aux_filename) 
         
         if not buoyancy:verify_timeformat(transcript_lines)
         
