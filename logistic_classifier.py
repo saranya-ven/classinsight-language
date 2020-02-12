@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression 
 from sklearn.metrics import accuracy_score,f1_score,recall_score,precision_score,confusion_matrix
 
+from metric_data_plot import plot_metric_by_data_size 
+
 dataset_path="transcripts/official_transcripts/4_Datasets/dataset_all_50dim.csv"
 dataset = pd.read_csv(dataset_path) 
 
@@ -81,6 +83,16 @@ for var_index in range(2,12):
     plt.legend()
     # show the plot
     plt.show()
+
+#===============================================================================
+# Code for plotting the value of a performance metric v/d data size (number of samples/documents)
+
+metric_name = "Recall" # {str} Could be Recall/Precision/AUC score/F score and so on
+metric_values = [1,2,3,4,5] # {List} Pass list of values for metric at different data sizes
+data_n = [4,5,6,7,8] # {List} Pass list of corresponding number of documents
+
+plot_metric_by_data_size(metric_name, metric_values, data_n)
+
 
 
 #===============================================================================
