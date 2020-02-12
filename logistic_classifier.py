@@ -59,6 +59,29 @@ for var_index in range(2,12):
     print("Recall   : ", recall_score(ytest, y_pred))
     print("F1       : ", f1_score(ytest, y_pred))
     print()
+    
+    #===============================================================================
+    # Code for plotting Precision-Recall curve and AUC score 
+    # Note : Not using ROC curve as it is applicable to balanced datasets 
+    #        (one v/s many classifiers are typically unbalanced)
+
+    classifier_precision, classifier_recall, thresholds = precision_recall_curve(ytest, y_pred) #over multiple thresholds
+    auc_score = auc(classifier_recall, classifier_precision)
+   
+    print("AUC for Logistic Regression: auc=%.3f" % auc_score)
+
+    # plot the precision-recall curve
+    no_skill_line = len(ytest[ytest==1]) / len(ytest) #bare-minimum threshold for performance
+    plt.plot([0, 1], [no_skill_line, no_skill_line], linestyle='--', label='Random Guess')
+    plt.plot(classifier_recall, classifier_precision, marker='.', label='Logistic Regression')
+    # axis labels
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    # show the legend
+    plt.legend()
+    # show the plot
+    plt.show()
+
 
 #===============================================================================
 # utts=dataset.iloc[:,1].values
