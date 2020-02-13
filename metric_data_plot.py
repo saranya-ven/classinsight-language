@@ -15,5 +15,4 @@ if __name__ == "__main__":
     a = [2,4,5,6]
     b = [8,8,8,5]
     name = "AUC"
-    print("inside plot")
     plot_metric_by_data_size(name, a, b)
