@@ -82,7 +82,8 @@ for var_index in range(2,12):
     # show the legend
     plt.legend()
     # show the plot
-    plt.show()
+    #plt.show()
+    plt.savefig('./prec_recall_plot.png')
 
 #===============================================================================
 # Code for plotting the value of a performance metric v/d data size (number of samples/documents)

@@ -6,7 +6,8 @@ def plot_metric_by_data_size(metric_label, metric, n_data):
     plt.xlabel('Number of Data Samples')
     plt.ylabel(metric_label)
     plt.legend()
-    plt.show() 
+    #plt.show()
+    plt.savefig('./performance_data_plot.png')
 
 
 if __name__ == "__main__":
