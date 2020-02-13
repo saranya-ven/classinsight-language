@@ -6,6 +6,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression 
 from sklearn.metrics import accuracy_score,f1_score,recall_score,precision_score,confusion_matrix
 
+from metric_data_plot import plot_metric_by_data_size 
+
 dataset_path="transcripts/official_transcripts/4_Datasets/dataset_all_50dim.csv"
 dataset = pd.read_csv(dataset_path) 
 
@@ -59,6 +61,40 @@ for var_index in range(2,12):
     print("Recall   : ", recall_score(ytest, y_pred))
     print("F1       : ", f1_score(ytest, y_pred))
     print()
+    
+    #===============================================================================
+    # Code for plotting Precision-Recall curve and AUC score 
+    # Note : Not using ROC curve as it is applicable to balanced datasets 
+    #        (one v/s many classifiers are typically unbalanced)
+
+    classifier_precision, classifier_recall, thresholds = precision_recall_curve(ytest, y_pred) #over multiple thresholds
+    auc_score = auc(classifier_recall, classifier_precision)
+   
+    print("AUC for Logistic Regression: auc=%.3f" % auc_score)
+
+    # plot the precision-recall curve
+    no_skill_line = len(ytest[ytest==1]) / len(ytest) #bare-minimum threshold for performance
+    plt.plot([0, 1], [no_skill_line, no_skill_line], linestyle='--', label='Random Guess')
+    plt.plot(classifier_recall, classifier_precision, marker='.', label='Logistic Regression')
+    # axis labels
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    # show the legend
+    plt.legend()
+    # show the plot
+    #plt.show()
+    plt.savefig('./prec_recall_plot.png')
+
+#===============================================================================
+# Code for plotting the value of a performance metric v/d data size (number of samples/documents)
+
+metric_name = "Recall" # {str} Could be Recall/Precision/AUC score/F score and so on
+metric_values = [1,2,3,4,5] # {List} Pass list of values for metric at different data sizes
+data_n = [4,5,6,7,8] # {List} Pass list of corresponding number of documents
+
+plot_metric_by_data_size(metric_name, metric_values, data_n)
+
+
 
 #===============================================================================
 # utts=dataset.iloc[:,1].values
