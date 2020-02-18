@@ -1,13 +1,14 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
 
-def plot_metric_by_data_size(metric_label, metric, n_data):
-    plt.plot(n_data, metric, marker='.', label='Model Performance & Input Size')
-    plt.xlabel('Number of Data Samples')
+def plot_metric_by_data_size(metric_label, metric_values, n_data):
+    plt.figure(metric_label)
+    plt.plot(n_data, metric_values, marker='.', label='Model Performance & Input Size')
+    plt.xlabel('Percentage of Data Samples')
     plt.ylabel(metric_label)
     plt.legend()
     #plt.show()
-    plt.savefig('./performance_data_plot.png')
+    plt.savefig('./plots/performance_vs_datasize/performance_percentages_data'+metric_label+'_plot.png')
 
 
 if __name__ == "__main__":
