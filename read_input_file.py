@@ -34,10 +34,11 @@ def addheader_and_trimspaces(file_path_name,header):
     file_path=os.path.dirname(file_path_name)
     
     
-    with open(file_path_name, encoding = 'unicode_escape') as csvfile:
+    with open(file_path_name, encoding = 'utf-8') as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
         orig_header=next(reader)#we ignore the header in the file, and use our own
-        
+        if 'Activity Description' in orig_header: 
+            header.append('Activity Description')
         lines.append(header)
         
         for row in reader:
@@ -57,29 +58,6 @@ def verify_speaker_format(speaker_string):
     if speaker_string.endswith(":"):
         speaker_string=speaker_string[:-1]
     return speaker_string
-
-            
-
-def get_utterance_type(line_dict):
-    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
-    return types
-    
-    
-def split_participation_segments(speaking_turns):
-    current_segment=Participation_Segment("no_segment")
-    segments=[]
-        
-    for (turn,participation_type) in speaking_turns:
-        if participation_type!=current_segment.participation_type:
-            
-            if current_segment.participation_type!="no_segment":segments.append(current_segment)
-            current_segment=Participation_Segment(participation_type,[turn])
-        
-        else:current_segment.speaking_turns.append(turn)
-    
-    segments.append(current_segment)
-    return segments
-
 
 def verify_timeformat(transcript_lines):
     time_format="%H:%M:%S"
@@ -101,6 +79,11 @@ def verify_timeformat(transcript_lines):
         
         line[timestamp_label]=l_time
 
+
+def get_utterance_type(line_dict):
+    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
+    return types
+    
 def get_line_participation_type(line_dict):
     for part_type in participation_types:
         if line_dict[part_type]=="1" or line_dict[part_type]==1:
@@ -112,7 +95,8 @@ def get_utterance_types(line_dict):
     return types
     
     
-def split_participation_segments(speaking_turns):
+
+def split_participation_segments(speaking_turns,use_activity_descritions=False):
     current_segment=Participation_Segment("no_segment")
     segments=[]
         
@@ -121,13 +105,17 @@ def split_participation_segments(speaking_turns):
             
             if current_segment.participation_type!="no_segment":segments.append(current_segment)
             current_segment=Participation_Segment(participation_type,[turn])
-        
-        else:current_segment.speaking_turns.append(turn)
+            if use_activity_descritions: 
+                current_segment.activity_description=turn.activity_description
+                del turn.activity_description
+        else:
+            current_segment.speaking_turns.append(turn)
+            if use_activity_descritions: 
+                current_segment.activity_description.extend(turn.activity_description)
+                del turn.activity_description
     
     segments.append(current_segment)
     return segments
-
-
 
     
         
@@ -141,7 +129,7 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
     
     line_number=0
     for line in transcript_lines:
-        
+
         l_speaker=verify_speaker_format(line[speaker_label])
         if l_speaker==teacher_nickname: l_speaker="Teacher"
         l_transcript=line[transcript_label]
@@ -162,11 +150,9 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
         
         new_utterance=Utterance(line_number,l_transcript,l_utterance_type,l_time)
         line_number+=1
-        
-                
+                        
         #IF SPEAKER CHANGES OR THE PARTICIPATION TYPE CHANGES, WE ASSUME A NEW SPEAKING TURN
         if (l_speaker!= current_turn.speaker_pseudonym and l_speaker!="") or l_participation_type!= current_participation_type:
-            
             
             if current_turn.speaker_pseudonym!= "no_speaking_turn": #If there is already a speaking turn  
                 current_turn.end_time=last_valid_time
@@ -178,10 +164,16 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
                 l_speaker=current_turn.speaker_pseudonym
             
             current_turn=Speaking_Turn(l_speaker,[new_utterance])
+            if 'Activity Description' in line:
+                if line['Activity Description']!="": current_turn.activity_description=[line['Activity Description']]
+                else:current_turn.activity_description=[]
             current_turn.initial_time=last_valid_time
             current_participation_type=l_participation_type
         
-        else:current_turn.utterances.append(new_utterance)
+        else:
+            current_turn.utterances.append(new_utterance)
+            if 'Activity Description' in line and line['Activity Description']!="":current_turn.activity_description.append(line['Activity Description'])
+       
                         
     current_turn.end_time=last_valid_time
     current_turn.do_time_calculations(time_format)
@@ -248,7 +240,7 @@ if __name__ == "__main__":
         csv_folder="transcripts/official_transcripts/2_CSV_Files/2020"
         json_folder="transcripts/official_transcripts/3_JSON_Files/2020"
         filenames=get_filenames_in_dir(csv_folder,".csv")
-        
+                
         #=======================================================================
         # csv_folder="transcripts/official_transcripts/2_CSV_Files/"
         # json_folder="transcripts/official_transcripts/3_JSON_Files/"
@@ -270,8 +262,6 @@ if __name__ == "__main__":
         filenames=["Buoyancy_Teacher.csv"]
         time_format="[%H:%M:%S;%f]"
 
-
-    
     header= ['Speaker', 
          'Time_Stamp', 
          'Transcript', 
@@ -340,6 +330,8 @@ if __name__ == "__main__":
             csvreader = csv.DictReader(csvfile, delimiter=",")
             for line in csvreader:
                 transcript_lines.append(line)   
+        if 'Activity Description' in line: use_activity_description=True
+        else: use_activity_description=False 
         #Here we remove the auxiliary file
         os.remove(aux_filename) 
         
@@ -348,7 +340,7 @@ if __name__ == "__main__":
         turns=split_speaking_turns(transcript_lines,teacher_nick)
         print ("Turns split")
         
-        class_segments=split_participation_segments(turns)
+        class_segments=split_participation_segments(turns,use_activity_description)
         for segment in class_segments:segment.calculate_duration(time_format)
         print ("Participation Segments split")
         
