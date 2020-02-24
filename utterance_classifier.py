@@ -81,6 +81,8 @@ if __name__ == "__main__":
     
     embedding_types=["20","50","128","250","512","512t"]
     
+    all_embeddings_f1scores=[]
+    all_embeddings_aucscores=[]
     
     for embedding_type in embedding_types:
         #embedding_type="512"
@@ -123,8 +125,8 @@ if __name__ == "__main__":
         
         interest_variables=range(2,12)# the indices of the columns related to the classes we want to predict
      
-        all_f1_scores=[]
-        all_auc_scores=[]
+        embedding_f1_scores=[]
+        embedding_auc_scores=[]
         for var_index in interest_variables:
             #HERE WE CAN CHANGE THE TYPE OF CLASSIFIER
             classifier = LogisticRegression(solver="lbfgs",random_state = 0)
@@ -154,20 +156,24 @@ if __name__ == "__main__":
               
               
             # Note : Not using ROC curve as it is applicable to balanced datasets (one v/s many classifiers are typically unbalanced)
-            auc_score=report_precision_recall_auc(yval, y_pred_proba_val,variable_name,embedding_type,directory_path="plots/AUC_vs_embedding",plot_no_skill=False)
+            auc_score=report_precision_recall_auc(yval, y_pred_proba_val,variable_name,embedding_type,directory_path="plots/AUC_vs_embedding")
             
             best_th_val,precrec_aucscore_val=report_precision_recall_fscore(yval, y_pred_proba_val,variable_name,embedding_type,directory_path="plots/prec_recall_fscore_"+embedding_type+"dim")#get best th on validation
             y_test_bestpred = [True if prob>best_th_val else False for prob in y_pred_proba_test]
             best_f1_score_test=f1_score(ytest,y_test_bestpred)
       
-            report_best_performance(variable_name,y,ytest,y_test_bestpred)
+            #report_best_performance(variable_name,y,ytest,y_test_bestpred)
             print("Prec/Rec AUC: %.3f" % precrec_aucscore_val)
           
-            all_f1_scores.append(best_f1_score_test)
-            all_auc_scores.append(precrec_aucscore_val)
+            embedding_f1_scores.append(best_f1_score_test)
+            embedding_auc_scores.append(precrec_aucscore_val)
          
-        print(f"\nAverage F1-Score Across Types:{sum(all_f1_scores)/len(all_f1_scores):.3f}")
-        print(f"Average Prec/Rec AUC-Score Across Types:{sum(all_auc_scores)/len(all_auc_scores):.3f}")
+        print(f"\nAverage F1-Score Across Types:{sum(embedding_f1_scores)/len(embedding_f1_scores):.3f}")
+        print(f"Average Prec/Rec AUC-Score Across Types:{sum(embedding_auc_scores)/len(embedding_auc_scores):.3f}")
+        all_embeddings_f1scores.append(embedding_f1_scores)
+        all_embeddings_aucscores.append(embedding_auc_scores)
+    print(all_embeddings_f1scores)
+    print(all_embeddings_aucscores)
             
         #===========================================================================
         # utts=dataset.iloc[:,1].values

@@ -33,7 +33,7 @@ def report_roc_auc(y_test,y_pred_proba,label_figure="",directory_path="plots"):
     plot_filename=directory_path+'/roc_auc_'+label_figure+'.png'
     plt.savefig(plot_filename)
     
-def report_precision_recall_auc(y_test,y_pred_proba,category_label,embedding_type,directory_path="plots",plot_no_skill=True):
+def report_precision_recall_auc(y_test,y_pred_proba,category_label,embedding_type,directory_path="plots",plot_no_skill=False):
     '''
     Code for plotting Precision-Recall curve and AUC score
     We prefer these metrics because the dataset is highly imbalanced
