@@ -1,6 +1,10 @@
 .project
 .pydevproject
+__init__.py
+.DS_Store
+
 transcripts/
 gorp_alignment/
+tf_cache/
 
 *.pyc

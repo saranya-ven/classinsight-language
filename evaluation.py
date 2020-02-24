@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.metrics import roc_curve,roc_auc_score, precision_recall_curve,auc,precision_recall_fscore_support, f1_score
 
 
-def report_roc_auc(y_test,y_pred_proba,label=""):
+def report_roc_auc(y_test,y_pred_proba,label_figure="",directory_path="plots"):
     '''
     Receives a set of labels and a set of probabilities over those labels predicted by a classifier
     and calculates ROC_AUC
@@ -22,7 +22,7 @@ def report_roc_auc(y_test,y_pred_proba,label=""):
     model_fpr, model_tpr, thresholds = roc_curve(y_test, y_pred_proba)
  
     # plot the roc curve for the model
-    plt.figure("ROC_AUC_"+label)
+    plt.figure("ROC_AUC_"+label_figure)
     plt.plot(noskill_fpr, noskill_tpr, linestyle='--', label='Majority')
     plt.plot(model_fpr, model_tpr, marker='.', label='Model')
     # axis labels
@@ -30,10 +30,10 @@ def report_roc_auc(y_test,y_pred_proba,label=""):
     plt.ylabel('True Positive Rate')
     plt.legend()
     
-    plot_filename='plots/roc_auc_'+label+'.png'
+    plot_filename=directory_path+'/roc_auc_'+label_figure+'.png'
     plt.savefig(plot_filename)
     
-def report_precision_recall_auc(y_test,y_pred_proba,label=""):
+def report_precision_recall_auc(y_test,y_pred_proba,category_label,embedding_type,directory_path="plots",plot_no_skill=True):
     '''
     Code for plotting Precision-Recall curve and AUC score
     We prefer these metrics because the dataset is highly imbalanced
@@ -45,23 +45,27 @@ def report_precision_recall_auc(y_test,y_pred_proba,label=""):
     #print("AUC: %.3f" % auc_score)
 
     # plot the precision-recall curve   
-    #no_skill_line = len(y_test[y_test==True]) / len(y_test) #bare-minimum threshold for performance
-    no_skill_line = len([True for val in y_test if val==True]) / len(y_test) #bare-minimum threshold for performance
-    plt.figure("AUC_"+label)
-    plt.plot([0, 1], [no_skill_line, no_skill_line], linestyle='--', label='Random Guess')
-    plt.plot(classifier_recall, classifier_precision, marker='.', label='Model')
+    plt.figure("AUC_"+category_label,figsize=(20,10))
 
+    plt.plot(classifier_recall, classifier_precision, marker='.', label=embedding_type)
+    
+    if plot_no_skill:
+        #no_skill_line = len(y_test[y_test==True]) / len(y_test) #bare-minimum threshold for performance
+        no_skill_line = len([True for val in y_test if val==True]) / len(y_test) #bare-minimum threshold for performance
+        plt.plot([0, 1], [no_skill_line, no_skill_line], linestyle='--', label='Random Guess')
+        
     # axis labels
     plt.xlabel('Recall')
     plt.ylabel('Precision')
+    plt.title("AUC  "+category_label)
     plt.legend()
     
-    plot_filename='plots/auc_prec_recall_'+label+'.png'
+    plot_filename=directory_path+'/auc_prec_recall_'+category_label+'.png'
     plt.savefig(plot_filename)
     return auc_score
     
     
-def report_precision_recall_fscore(y_test,y_pred_proba,label="",use_plots=True):
+def report_precision_recall_fscore(y_test,y_pred_proba,category_label,embedding_type,use_plots=True,directory_path="plots"):
     '''
     Code for plotting Precision, Recall and FScore VS Thresholds
     Used to select appropriate thresholds
@@ -83,7 +87,7 @@ def report_precision_recall_fscore(y_test,y_pred_proba,label="",use_plots=True):
     
     if use_plots:
         # PLOT the precision,recall,fscore VS thresholds   
-        plt.figure("PrecRecFScore_"+label)
+        plt.figure("PrecRecFScore_"+category_label+embedding_type,figsize=(20,10))
         plt.plot(thresholds,classifier_precision, marker='.', label='Precision')
         plt.plot(thresholds, classifier_recall, marker='.', label='Recall')
         plt.plot(thresholds, fscores_th, marker='.', label='FScore')
@@ -91,9 +95,10 @@ def report_precision_recall_fscore(y_test,y_pred_proba,label="",use_plots=True):
         # axis labels
         plt.xlabel('Threshold')
         plt.ylabel('Score')
+        plt.title(category_label)
         plt.legend()
         
-        plot_filename='plots/prec_recall_fscore_'+label+'.png'
+        plot_filename=directory_path+'/prec_recall_fscore_'+category_label+'.png'
         plt.savefig(plot_filename)
     
     return best_th,auc_score

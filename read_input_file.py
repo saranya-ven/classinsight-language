@@ -34,7 +34,7 @@ def addheader_and_trimspaces(file_path_name,header):
     file_path=os.path.dirname(file_path_name)
     
     
-    with open(file_path_name, encoding = 'utf-8') as csvfile:
+    with open(file_path_name, encoding = 'utf-8', errors="ignore") as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
         orig_header=next(reader)#we ignore the header in the file, and use our own
         if 'Activity Description' in orig_header: 
@@ -44,6 +44,7 @@ def addheader_and_trimspaces(file_path_name,header):
         for row in reader:
             row_strip=[column_content.strip() for column_content in row]
             lines.append(row_strip)
+
     
     aux_filename=file_path+"/mod_"+file_basename
     with open(aux_filename,"w+",encoding = 'utf-8')  as csvfile:
@@ -129,11 +130,12 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
     
     line_number=0
     for line in transcript_lines:
-
+        line_number+=1
+        
         l_speaker=verify_speaker_format(line[speaker_label])
         if l_speaker==teacher_nickname: l_speaker="Teacher"
         l_transcript=line[transcript_label]
-        if l_transcript=="": continue
+        if l_transcript=="": continue #if the transcript is empty, ignore it
         
 
         l_time=line[timestamp_label]
@@ -145,11 +147,12 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
         l_participation_type=get_line_participation_type(line)
         if l_participation_type=="none":
             print (str(line_number)+" no participation type")
+            #print (line)
             l_participation_type=current_participation_type
             
-        
         new_utterance=Utterance(line_number,l_transcript,l_utterance_type,l_time)
-        line_number+=1
+        
+        
                         
         #IF SPEAKER CHANGES OR THE PARTICIPATION TYPE CHANGES, WE ASSUME A NEW SPEAKING TURN
         if (l_speaker!= current_turn.speaker_pseudonym and l_speaker!="") or l_participation_type!= current_participation_type:
@@ -237,9 +240,10 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="transcripts/official_transcripts/2_CSV_Files/2020"
-        json_folder="transcripts/official_transcripts/3_JSON_Files/2020"
+        csv_folder="transcripts/official_transcripts/2_CSV_Files"
+        json_folder="transcripts/official_transcripts/3_JSON_Files"
         filenames=get_filenames_in_dir(csv_folder,".csv")
+        #filenames=["20190205_Jeff_Per4_reprocessed.csv"]
                 
         #=======================================================================
         # csv_folder="transcripts/official_transcripts/2_CSV_Files/"
@@ -360,6 +364,7 @@ if __name__ == "__main__":
         
     for filename in filenames:
         process_file(filename,header)
+        #g=input("press something to cotinue")
             
                 
         
