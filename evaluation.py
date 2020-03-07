@@ -1,3 +1,4 @@
+import os
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import roc_curve,roc_auc_score, precision_recall_curve,auc,precision_recall_fscore_support, f1_score
@@ -31,22 +32,20 @@ def report_roc_auc(y_test,y_pred_proba,label_figure="",directory_path="plots"):
     plt.legend()
     
     plot_filename=directory_path+'/roc_auc_'+label_figure+'.png'
+    if not os.path.exists(directory_path):os.makedirs(directory_path)
     plt.savefig(plot_filename)
     
-def report_precision_recall_auc(y_test,y_pred_proba,category_label,embedding_type,directory_path="plots",plot_no_skill=False):
+def plot_precision_recall_auc(y_test,y_pred_proba,category_label,embedding_type,directory_path="plots",plot_no_skill=False):
     '''
-    Code for plotting Precision-Recall curve and AUC score
+    Plots Precision-Recall curve and AUC score
     We prefer these metrics because the dataset is highly imbalanced
     Used to test classifiers across thresholds
     '''
     classifier_precision, classifier_recall, thresholds = precision_recall_curve(y_test, y_pred_proba) #over multiple thresholds
-    
     auc_score = auc(classifier_recall, classifier_precision)           
-    #print("AUC: %.3f" % auc_score)
 
     # plot the precision-recall curve   
     plt.figure("AUC_"+category_label,figsize=(20,10))
-
     plt.plot(classifier_recall, classifier_precision, marker='.', label=embedding_type)
     
     if plot_no_skill:
@@ -61,6 +60,7 @@ def report_precision_recall_auc(y_test,y_pred_proba,category_label,embedding_typ
     plt.legend()
     
     plot_filename=directory_path+'/auc_prec_recall_'+category_label+'.png'
+    if not os.path.exists(directory_path):os.makedirs(directory_path)
     plt.savefig(plot_filename)
     return auc_score
     
@@ -99,6 +99,7 @@ def report_precision_recall_fscore(y_test,y_pred_proba,category_label,embedding_
         plt.legend()
         
         plot_filename=directory_path+'/prec_recall_fscore_'+category_label+'.png'
+        if not os.path.exists(directory_path):os.makedirs(directory_path)
         plt.savefig(plot_filename)
     
     return best_th,auc_score
@@ -113,12 +114,5 @@ if __name__=="__main__":
     #report_roc_auc(y_gold, y_pred)
     report_precision_recall_fscore(y_gold, y_pred)
     
-    
-    #=======================================================================
-    # SOMETHING ABOUT CROSS VALIDATION
-    # cv = RepeatedStratifiedKFold(n_splits=10, n_repeats=5, random_state=0)
-    # scores = cross_val_score(classifier, x, y, scoring='roc_auc', cv=cv, n_jobs=1)#n_jobs=-1 means use all processors... and crashes
-    # print('Mean ROC AUC: %.3f' % np.mean(scores))
-    #=======================================================================
 
     

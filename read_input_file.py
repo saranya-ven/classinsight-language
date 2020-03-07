@@ -240,7 +240,7 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="transcripts/official_transcripts/2_CSV_Files"
+        csv_folder="transcripts/official_transcripts/2_CSV_Files/2020"
         json_folder="transcripts/official_transcripts/3_JSON_Files"
         filenames=get_filenames_in_dir(csv_folder,".csv")
         #filenames=["20190205_Jeff_Per4_reprocessed.csv"]
