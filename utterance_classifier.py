@@ -183,12 +183,9 @@ if __name__ == "__main__":
                     #classifier = LogisticRegression(solver="lbfgs", random_state=seed_all,max_iter=300)
                     classifier.fit(X_train,y_train)
                 
-                    #get predictions in validation set
+                    #get probabilities in validation and testing sets
                     y_pred_proba_val = classifier.predict_proba(X_val)
-                    y_pred_val = classifier.predict(X_val)
-                    #get predictions in testing set
                     y_pred_proba_test=classifier.predict_proba(X_test)
-                    y_pred_test=classifier.predict(X_test)
                     #We are only interested in the probability of the given class, not in the alternative (!given_class)
                     # keep probabilities for the positive outcome only
                     y_pred_proba_val = y_pred_proba_val[:, 1]
@@ -196,8 +193,10 @@ if __name__ == "__main__":
                        
                     # Note : Not using ROC curve as it is applicable to balanced datasets (one v/s many classifiers are typically unbalanced)
                     #plot_precision_recall_auc(yval,y_pred_proba_val,variable_name,label_feats,directory_path="plots/AUC_vs_embedding")
+                    #get threshold, and auc on validation
                     best_th_val,precrec_aucscore_val=report_precision_recall_fscore(y_val, y_pred_proba_val,variable_name,label_feats,directory_path="plots/prec_recall_fscore_"+label_feats,use_plots=False)#get best th on validation
                     
+                    #use threshold on validation to classify on test
                     y_test_bestpred = [True if prob>best_th_val else False for prob in y_pred_proba_test]
                     best_f1_score_test=f1_score(y_test,y_test_bestpred)
                     
