@@ -139,6 +139,29 @@ def collect_period_utterances(period_object):
                 utterances_period.append(new_utt)
             previous_speaker_type=turn.speaker_type
     return utterances_period
+
+def extract_features_period(period_object,embedding_model):
+    '''
+    Gets a Period object and extracts for each utterance its features and their sentence embeddings
+    '''
+    print("\n"+period_object.original_csv)
+    utterances_period=collect_period_utterances(period_object)
+    print("Utterances collected")
+    utterances_period_embeddings=get_utterances_embeddings(utterances_period,embedding_model)
+    print("Embeddings calculated")
+     
+    features_utterances=[]
+    for utt_complete,utt_embedding in zip(utterances_period,utterances_period_embeddings):
+        #print (period.original_csv,utt_complete[0].utterance)
+        utt_features=get_utterance_features(utt_complete)
+        for i in range(embedding_dimensionality):
+            utt_features.append(utt_embedding[i])
+            
+        features_utterances.append(utt_features)
+    print ("Features extracted")
+    return features_utterances
+            
+
         
 def get_utterances_embeddings(utterances_list,embed_model):
     '''
@@ -151,31 +174,21 @@ def get_utterances_embeddings(utterances_list,embed_model):
 
 if __name__ == "__main__":
     
+    os.environ['TFHUB_CACHE_DIR']='tf_cache'
+    
     embedding_types=["20","50","128","250","512","512t"]
-    for embedding_type in embedding_types:
+    for embedding_type in embedding_types:    
         
+        embedding_model=load_embeddings_model(embedding_type)
+        print("Embedding model loaded: "+embedding_type)
+        #Sometimes the cached models throw errors, particularly if the download process fails, then the 
+        #corresponding files should be located and deleted, and then run the script again to try to download again the model
+    
         if embedding_type=="512t":embedding_dimensionality=512
         else: embedding_dimensionality=int(embedding_type)
         
         output_csv_filename="dataset_all_"+embedding_type+"dim.csv"
         
-        json_folder="transcripts/official_transcripts/3_JSON_Files/"
-        datasets_folder="transcripts/official_transcripts/4_Datasets/"
-        outputfile_path=datasets_folder+output_csv_filename
-        
-        json_files=get_filenames_in_dir(json_folder,".json")
-        #json_files=["Bonnie_20190508_per1.json"]
-        #json_files=['Teacher_Buoyancy.json']
-        
-        all_periods=[]
-        for filename in json_files:
-            json_file=open(json_folder+"/"+filename)
-            json_str = json_file.read()
-            period_object = jsonpickle.decode(json_str)
-            all_periods.append(period_object)
-            
-        
-        utterances=[]
         headers=["Original_CSV_File","Utterance_String",
                  "Utt_Turn_Taking","Metacognitive_Modelling","Utt_Behavior","Utt_Teacher_OpenQ","Utt_Teacher_CloseQ","Utt_Student_OpenQ","Utt_Student_CloseQ","Utt_Student_CloseR","Utt_Student_OpenR","Utt_Student_ExpEvi",
                  "Speaker_teacher","Speaker_student","Speaker_other","Previous_speaker_teacher","Previous_speaker_student","Previous_speaker_other","Previous_speaker_none",
@@ -190,32 +203,30 @@ if __name__ == "__main__":
         for i in range(embedding_dimensionality):
             headers.append("Embedding_"+str(i))
             
-    
-        os.environ['TFHUB_CACHE_DIR']='tf_cache'
-        embedding_model=load_embeddings_model(embedding_type)
-        print("Embedding model loaded: "+embedding_type)
-        #Sometimes the cached models throw errors, particularly if the download process fails, then the 
-        #corresponding files should be located and deleted, and then run the script again to try to download again the model
+        #READ JSON FILES AND LOAD PERIODS
+        json_folder="transcripts/official_transcripts/3_JSON_Files/"
+        datasets_folder="transcripts/official_transcripts/4_Datasets/"
+        outputfile_path=datasets_folder+output_csv_filename
         
+        json_files=get_filenames_in_dir(json_folder,".json")
+        
+        all_periods=[]
+        for filename in json_files:
+            json_file=open(json_folder+"/"+filename)
+            json_str = json_file.read()
+            period_object = jsonpickle.decode(json_str)
+            all_periods.append(period_object)
+        
+        #PROCESS EACH PERIOD AND ADD TO FILE
         with open(outputfile_path,"w+",encoding="utf-8") as output_csv_file:
             dataset_writer = csv.writer(output_csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
             dataset_writer.writerow(headers)
             all_utterances=[]
             
-            for period in all_periods:
-                print("\n"+period.original_csv)
-                utterances_period=collect_period_utterances(period)
-                print("Utterances collected")
-                utterances_period_embeddings=get_utterances_embeddings(utterances_period,embedding_model)
-                print("Embeddings calculated")
-                all_utterances.extend(utterances_period)
-                 
-                for utt_complete,utt_embedding in zip(utterances_period,utterances_period_embeddings):
-                    #print (period.original_csv,utt_complete[0].utterance)
-                    utt_features=get_utterance_features(utt_complete)
-                    for i in range(embedding_dimensionality):
-                        utt_features.append(utt_embedding[i])
-                    
+            for period in all_periods:    
+                period_utterances_features=extract_features_period(period,embedding_model)
+            
+                for utt_features in period_utterances_features:
                     try:dataset_writer.writerow(utt_features)
                     except UnicodeEncodeError as e:
                         print (e)
@@ -223,5 +234,5 @@ if __name__ == "__main__":
                         print (utt_features[1])
                         dataset_writer.writerow(utt_features)
                 print ("Features extracted and added to file")
-            
+                
             print ("\n All files processed and dataset file created: "+outputfile_path)

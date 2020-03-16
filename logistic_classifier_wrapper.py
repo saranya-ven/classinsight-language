@@ -2,7 +2,7 @@
 Having done a grid search to find the optimal configuration for each utterance type:
   1. load the best performing configuration
   2. train a classifier for each utterance type and with the best configuration with the whole dataset
-  3. wrap up all the classifiers into one object that receives a new CSV or JSON file and performs the classification
+  3. wrap up all the classifiers into one object and dump them into a pickle file
 
 '''
 
@@ -25,15 +25,16 @@ if __name__ == "__main__":
                 "Utt_Student_OpenR",#10
                 "Utt_Student_ExpEvi"
                 ]
+    
     all_classifiers={}
     all_thresholds={}
     necessary_embeddings=set()
-    
+    output_filename="master_logistic_classifier.pkl"
     
     for utt_type in utt_types:
         pickle_filepath="saved_models/best_"+utt_type+ ".pkl"
         with open(pickle_filepath, 'rb') as file:
-            (classifier,model_config)= pickle.load(file) #so far we are not using the classifier, maybe we can drop that part
+            (classifier,model_config)= pickle.load(file) #so far we are not using the classifier, as we retrain a classifier with the whole dataset
             
         seed_all=model_config["random_seed"]
         label_feats=model_config["embed_type"]
@@ -102,6 +103,10 @@ if __name__ == "__main__":
         classifier.fit(x[:,2:],y) #first 2 dimensions are ignored (csv file and utterance)
         all_classifiers[variable_name]=classifier
         all_thresholds[variable_name]=thresh
+        
+    output_file=open(output_filename,'wb')
+    pickle.dump((all_classifiers,all_thresholds,necessary_embeddings),output_file)
+    output_file.close()
         
         
         
