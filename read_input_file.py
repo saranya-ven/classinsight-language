@@ -27,19 +27,27 @@ def get_filenames_in_dir(dir_path,file_extension):
     print(filenames)
     return filenames
 
-def addheader_and_trimspaces(file_path_name,header):
+def addheader_and_trimspaces(file_path_name):
     lines=[]
     
     file_basename=os.path.basename(file_path_name)
     file_path=os.path.dirname(file_path_name)
     
+    use_header2=False
     
     with open(file_path_name, encoding = 'utf-8', errors="ignore") as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
-        orig_header=next(reader)#we ignore the header in the file, and use our own
-        if 'Activity Description' in orig_header: 
-            header.append('Activity Description')
-        lines.append(header)
+        orig_header=next(reader)#we ignore the header in the file which is prone to typos, and use our own
+    
+        file_header=header
+        for h in orig_header:
+            if h.find("oicing")>-1: 
+                use_header2=True
+                file_header=header2
+                break
+        
+        if not use_header2 and 'Activity Description' in orig_header: file_header.append('Activity Description')
+        lines.append(file_header)
         
         for row in reader:
             row_strip=[column_content.strip() for column_content in row]
@@ -81,9 +89,6 @@ def verify_timeformat(transcript_lines):
         line[timestamp_label]=l_time
 
 
-def get_utterance_type(line_dict):
-    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
-    return types
     
 def get_line_participation_type(line_dict):
     for part_type in participation_types:
@@ -91,11 +96,8 @@ def get_line_participation_type(line_dict):
             return part_type
     return "none"
    
-def get_utterance_types(line_dict):
-    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
-    return types
-    
-    
+def get_utterance_types(line_dict,utt_types):
+    return [utt_type for utt_type in utt_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
 
 def split_participation_segments(speaking_turns,use_activity_descritions=False):
     current_segment=Participation_Segment("no_segment")
@@ -142,17 +144,15 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
         if isTimeFormat(l_time,time_format): last_valid_time=l_time
         elif l_time!="":print ("invalid time at line:"+str(line_number)+"__"+l_time+"__")
 
-        
-        l_utterance_type=get_utterance_types(line)
+        if 'Re-Voicing' in line:l_utterance_type=get_utterance_types(line,utterance_types2)
+        else:l_utterance_type=get_utterance_types(line, utterance_types)
+            
         l_participation_type=get_line_participation_type(line)
         if l_participation_type=="none":
             print (str(line_number)+" no participation type")
-            #print (line)
             l_participation_type=current_participation_type
             
         new_utterance=Utterance(line_number,l_transcript,l_utterance_type,l_time)
-        
-        
                         
         #IF SPEAKER CHANGES OR THE PARTICIPATION TYPE CHANGES, WE ASSUME A NEW SPEAKING TURN
         if (l_speaker!= current_turn.speaker_pseudonym and l_speaker!="") or l_participation_type!= current_participation_type:
@@ -240,8 +240,8 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="transcripts/official_transcripts/2_CSV_Files/2020"
-        json_folder="transcripts/official_transcripts/3_JSON_Files"
+        csv_folder="transcripts/official_transcripts/2_CSV_Files"
+        json_folder="transcripts/official_transcripts/3_JSON_Filesnew/"
         filenames=get_filenames_in_dir(csv_folder,".csv")
         #filenames=["20190205_Jeff_Per4_reprocessed.csv"]
                 
@@ -288,6 +288,33 @@ if __name__ == "__main__":
          'Pair Work', 
          'Other']
 
+    header2= ['Speaker', 
+         'Time_Stamp', 
+         'Transcript', 
+         
+         'Turn-Taking Facilitation', 
+         'Metacognitive Modeling Questions', 
+         'Behavior Management Questions', 
+         'Re-Voicing',
+         'Teacher Open-Ended S/Q', 
+         'Teacher Close-Ended S/Q', 
+         'Teacher Explanation + Evidence',
+         'Student Open-Ended S/Q', 
+         'Student Close-Ended S/Q', 
+         'Student Close-Ended Response', 
+         'Student Open-Ended Response', 
+         'Student Explanation + Evidence', 
+        
+         'Whole class discussion', 
+         'Lecture', 
+         'Small group + Instructor', 
+         'Individual Work', 
+         'Pair Work', 
+         'Other',
+         'Activity Description']
+        
+    
+
     utterance_types=['Turn-Taking Facilitation', 
              'Metacognitive Modeling Questions', 
              'Behavior Management Questions', 
@@ -299,6 +326,20 @@ if __name__ == "__main__":
              'Student Close-Ended Response', 
              'Student Open-Ended Response', 
              'Student Explanation + Evidence' ]
+
+    utterance_types2=['Turn-Taking Facilitation', 
+             'Metacognitive Modeling Questions', 
+             'Behavior Management Questions', 
+             'Re-Voicing',
+             'Teacher Open-Ended S/Q', 
+             'Teacher Close-Ended S/Q', 
+             'Teacher Explanation + Evidence',
+             'Student Open-Ended S/Q', 
+             'Student Close-Ended S/Q', 
+             'Student Close-Ended Response', 
+             'Student Open-Ended Response', 
+             'Student Explanation + Evidence']
+    
     
     participation_types=['Whole class discussion', 
              'Lecture', 
@@ -313,7 +354,7 @@ if __name__ == "__main__":
     
     
     
-    def process_file(file_name,header):
+    def process_file(file_name):
         print ("Processing: "+file_name)
         
         filename_base=os.path.basename(file_name)
@@ -328,7 +369,7 @@ if __name__ == "__main__":
         print(file_name_path)
         
         #This part creates an auxiliary file: mod_+originalfilename
-        aux_filename=addheader_and_trimspaces(file_name_path,header)
+        aux_filename=addheader_and_trimspaces(file_name_path)
         transcript_lines=[]
         with open(aux_filename,encoding="utf-8") as csvfile:
             csvreader = csv.DictReader(csvfile, delimiter=",")
@@ -363,8 +404,8 @@ if __name__ == "__main__":
         
         
     for filename in filenames:
-        process_file(filename,header)
-        #g=input("press something to cotinue")
+        process_file(filename)
+        #g=input("press something to continue")
             
                 
         

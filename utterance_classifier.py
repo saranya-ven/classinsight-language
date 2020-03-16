@@ -178,21 +178,27 @@ if __name__ == "__main__":
                     y_train,y_val,y_test = y[train_index], y[val_index], y[test_index]
                     
                     #HERE WE CAN CHANGE THE TYPE OF CLASSIFIER
-                    #We are essentially doing 2 CVs, one to get the parameter for the regularizer, implemented by the LRCV function below, and the second one, to report the performances
-                    classifier = LogisticRegressionCV(cv=10,solver="lbfgs", random_state=seed_all,max_iter=300) # We use this line if we want to tune the weight of the regularizer, we get very similar results, but more slowly
-                    #classifier = LogisticRegression(solver="lbfgs", random_state=seed_all,max_iter=300)
+                    
+                    #We are essentially doing 2 CVs, one to get the parameter for the regularizer, implemented by the LRCV function below, and the second one, to evaluate the classifier
+                    #classifier = LogisticRegressionCV(cv=10,solver="lbfgs", random_state=seed_all,max_iter=300) # We use this line if we want to tune the weight of the regularizer, we get very similar results, but more slowly
+                    
+                    #use class_weight='balanced' to balance the classes
+                    #use solver="saga" to use l1 regularization 
+                    classifier = LogisticRegression(solver="lbfgs", random_state=seed_all,max_iter=300) 
                     classifier.fit(X_train,y_train)
                 
                     #get probabilities in validation and testing sets
                     y_pred_proba_val = classifier.predict_proba(X_val)
                     y_pred_proba_test=classifier.predict_proba(X_test)
                     #We are only interested in the probability of the given class, not in the alternative (!given_class)
-                    # keep probabilities for the positive outcome only
                     y_pred_proba_val = y_pred_proba_val[:, 1]
                     y_pred_proba_test= y_pred_proba_test[:,1]
                        
                     # Note : Not using ROC curve as it is applicable to balanced datasets (one v/s many classifiers are typically unbalanced)
-                    #plot_precision_recall_auc(yval,y_pred_proba_val,variable_name,label_feats,directory_path="plots/AUC_vs_embedding")
+                    
+                    #Using 10fold CV, we would end up with 10 plots (1 per fold), so, probably we can avoid the plots altogether unless necessary
+                    #plot_precision_recall_auc(y_val,y_pred_proba_val,variable_name,label_feats,directory_path="plots/AUC_vs_embedding") 
+                    
                     #get threshold, and auc on validation
                     best_th_val,precrec_aucscore_val=report_precision_recall_fscore(y_val, y_pred_proba_val,variable_name,label_feats,directory_path="plots/prec_recall_fscore_"+label_feats,use_plots=False)#get best th on validation
                     
@@ -227,6 +233,3 @@ if __name__ == "__main__":
     print(all_embeddings_f1scores)
     print(all_embeddings_aucscores)
     plt.close("all")
-            
-       
-        
