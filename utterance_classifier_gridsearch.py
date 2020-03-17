@@ -107,7 +107,7 @@ if __name__ == "__main__":
         
         dataset = pd.read_csv(dataset_path) 
         
-        headers=["Original_CSV_File","Utterance_String",
+        headers=["Original_CSV_File","Utterance_String","Speaker","Time_Stamp",
         
                 "Utt_Turn_Taking",#2
                 "Metacognitive_Modelling",#3

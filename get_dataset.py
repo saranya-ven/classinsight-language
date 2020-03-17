@@ -18,13 +18,15 @@ def get_utterance_features(utt_complete):
     '''
     utterance_string=utt_complete[0].utterance
     utterance_types= utt_complete[0].utterance_type
-    speaker_type=utt_complete[1]
-    previous_speaker_type=utt_complete[2]
-    next_speaker_type=utt_complete[3]
-    particip_structure=utt_complete[4]
-    first_utt_in_turn=utt_complete[5]
-    last_utt_in_turn=utt_complete[6]
-    original_csvname=utt_complete[7]
+    utterance_timestamp=utt_complete[0].timestamp
+    speaker_pseudonym=utt_complete[1]
+    speaker_type=utt_complete[2]
+    previous_speaker_type=utt_complete[3]
+    next_speaker_type=utt_complete[4]
+    particip_structure=utt_complete[5]
+    first_utt_in_turn=utt_complete[6]
+    last_utt_in_turn=utt_complete[7]
+    original_csvname=utt_complete[8]
     
     speaker_types=["teacher","student","other"]
     previous_speaker_types=["teacher","student","other","no_previous_speaker"]
@@ -48,7 +50,7 @@ def get_utterance_features(utt_complete):
     key_phrases=["Go ahead","go ahead","right?", "Right.","How many","How much"]
     
     
-    utterance_features=[original_csvname,utterance_string]
+    utterance_features=[original_csvname,utterance_string,speaker_pseudonym,utterance_timestamp]
     
     #THESE ARE THE CLASSES WE ARE LOOKING FOR
     for utt_type in utterance_types_general:
@@ -115,8 +117,8 @@ def collect_period_utterances(period_object):
         for t,turn in enumerate(segment.speaking_turns):
             
             if t ==len(segment.speaking_turns)-1: #If it's the last speaking turn in the segment
-                if s==len(period.segments)-1: next_speaker_type="no_next_speaker" #if it's the last segment
-                else: next_speaker_type=period.segments[s+1].speaking_turns[0].speaker_type #if there is another segment
+                if s==len(period_object.segments)-1: next_speaker_type="no_next_speaker" #if it's the last segment
+                else: next_speaker_type=period_object.segments[s+1].speaking_turns[0].speaker_type #if there is another segment
             else: 
                 next_speaker_type=segment.speaking_turns[t+1].speaker_type #if there is another turn in this segment, find out the type of the next speaker
                 
@@ -134,17 +136,17 @@ def collect_period_utterances(period_object):
                 if u == len(turn.utterances)-1:last_utterance_in_Turn=True
                 
                 #print "\t","\t","\t",utterance.utterance,first_utterance_in_Turn,last_utterance_in_Turn
-                new_utt=[utterance, turn.speaker_type, previous_speaker_type,next_speaker_type, segment.participation_type,first_utterance_in_Turn,last_utterance_in_Turn,period.original_csv]
+                new_utt=[utterance,turn.speaker_pseudonym,turn.speaker_type, previous_speaker_type,next_speaker_type, segment.participation_type,first_utterance_in_Turn,last_utterance_in_Turn,period_object.original_csv]
                 
                 utterances_period.append(new_utt)
             previous_speaker_type=turn.speaker_type
     return utterances_period
 
-def extract_features_period(period_object,embedding_model):
+def extract_features_period(period_object,embedding_model,embedding_dimensionality):
     '''
     Gets a Period object and extracts for each utterance its features and their sentence embeddings
     '''
-    print("\n"+period_object.original_csv)
+    print(period_object.original_csv)
     utterances_period=collect_period_utterances(period_object)
     print("Utterances collected")
     utterances_period_embeddings=get_utterances_embeddings(utterances_period,embedding_model)
@@ -189,7 +191,7 @@ if __name__ == "__main__":
         
         output_csv_filename="dataset_all_"+embedding_type+"dim.csv"
         
-        headers=["Original_CSV_File","Utterance_String",
+        headers=["Original_CSV_File","Utterance_String","Speaker","Time_Stamp",
                  "Utt_Turn_Taking","Metacognitive_Modelling","Utt_Behavior","Utt_Teacher_OpenQ","Utt_Teacher_CloseQ","Utt_Student_OpenQ","Utt_Student_CloseQ","Utt_Student_CloseR","Utt_Student_OpenR","Utt_Student_ExpEvi",
                  "Speaker_teacher","Speaker_student","Speaker_other","Previous_speaker_teacher","Previous_speaker_student","Previous_speaker_other","Previous_speaker_none",
                  "Next_speaker_teacher","Next_speaker_student","Next_speaker_other","Next_speaker_none",
@@ -224,7 +226,8 @@ if __name__ == "__main__":
             all_utterances=[]
             
             for period in all_periods:    
-                period_utterances_features=extract_features_period(period,embedding_model)
+                print()
+                period_utterances_features=extract_features_period(period,embedding_model,embedding_dimensionality)
             
                 for utt_features in period_utterances_features:
                     try:dataset_writer.writerow(utt_features)
