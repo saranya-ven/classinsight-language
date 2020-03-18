@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt 
 
 from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LogisticRegression 
+from sklearn.neural_network import MLPClassifier
 from sklearn.metrics import accuracy_score,f1_score,recall_score,precision_score,confusion_matrix,precision_recall_curve,auc
 
 from metric_data_plot import plot_metric_by_data_size 
@@ -46,13 +46,12 @@ for i in range(embedding_dimensionality):
 #x = dataset.iloc[:, 12:71].values
 x= dataset.iloc[:,12:71+embedding_dimensionality].values
 x = x*1
-
 for var_index in range(2,12):
     y = dataset.iloc[:, var_index].values 
     y = y*1
     xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = 0.10, random_state = 0)
     
-    classifier = LogisticRegression(random_state = 0, max_iter = 10000) 
+    classifier = MLPClassifier(random_state = 0,learning_rate='adaptive', max_iter = 10000) 
     classifier.fit(xtrain, ytrain) 
 
     y_pred = classifier.predict(xtest) 

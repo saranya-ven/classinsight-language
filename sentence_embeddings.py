@@ -17,8 +17,15 @@ models_dict = {
     'embed_512t_model_url' : "https://tfhub.dev/google/universal-sentence-encoder-large/5" #trained with transformer
     }
 
+EMBEDDING_SIZE = 128
+    
+#get URL according to embedding size
+model_url = 'embed_{}_model_url'.format(EMBEDDING_SIZE)
 
-def get_sentence_embeddings(sentences,embed_size=128):
+#load model
+embed = hub.load(models_dict[model_url])
+
+def get_sentence_embeddings(sentences,EMBEDDING_SIZE):
     """ Fetches n-dimensional embedding per input sentence from pretrained sentence embedding module.
     Args:
         sentences: Python List of String/sequence of Strings.
@@ -28,11 +35,6 @@ def get_sentence_embeddings(sentences,embed_size=128):
  
     """
     
-    #get URL according to embedding size
-    model_url = 'embed_{}_model_url'.format(embed_size)
-    #load model
-    embed = hub.load(models_dict[model_url])
-    
     return np.array(embed(sentences))
 
 
@@ -40,18 +42,26 @@ def get_sentence_embeddings(sentences,embed_size=128):
 if __name__ == "__main__":
 
     #set embedding size(20/50/128/250/512/512t) 
-    EMBEDDING_SIZE =250
+    EMBEDDING_SIZE =128
+    
+    #get URL according to embedding size
+    model_url = 'embed_{}_model_url'.format(EMBEDDING_SIZE)
+
+    #load model
+    embed = hub.load(models_dict[model_url])
+    
+    #get embeddings from loaded model
+    embeddings = get_sentence_embeddings(sentences_,EMBEDDING_SIZE)
+    
+    print("Shape of output/embeddings array", embeddings.shape)
+    
+    
     
     #get input sentences/read from file into list
     sentences_= ["Universal Sentence Encoder embeddings also support short paragraphs.",
                  "There is no hard limit on how long the paragraph is.", 
                  "Roughly, the longer the more 'diluted' the embedding will be."]
-
-
-    #get embeddings from loaded model
-    embeddings = get_sentence_embeddings(sentences_,EMBEDDING_SIZE)
-    
-    print("Shape of output/embeddings array", embeddings.shape)
+   
     
     for sent_emb in embeddings:
         print(sent_emb)
