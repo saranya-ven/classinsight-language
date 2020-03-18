@@ -157,8 +157,12 @@ if __name__ == "__main__":
     
     output_csv_filename="dataset_buoyancy_"+embedding_model+"dim.csv"
     
-    json_folder="transcripts/official_transcripts/3_JSON_Files/"
-    datasets_folder="transcripts/official_transcripts/4_Datasets/"
+    #json_folder="transcripts/official_transcripts/3_JSON_Files/"
+    #datasets_folder="transcripts/official_transcripts/4_Datasets/"
+    
+    json_folder="/data/class-insight/3_JSON_Files/"
+    datasets_folder="/data/class-insight/4_Datasets/"
+    
     outputfile_path=datasets_folder+output_csv_filename
     
     #json_files=get_filenames_in_dir(json_folder,".json")
@@ -178,7 +182,7 @@ if __name__ == "__main__":
 
     all_periods=[]
     for filename in json_files:
-        json_file=open(json_folder+"/"+filename)
+        json_file=open(json_folder+filename)
         json_str = json_file.read()
         period_object = jsonpickle.decode(json_str)
         all_periods.append(period_object)
