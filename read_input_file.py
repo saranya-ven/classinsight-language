@@ -4,9 +4,95 @@ Created on Sep 5, 2019
 
 @author: jzc1104
 '''
-import csv, os
+import csv, os, copy
 from datetime import datetime
 from data_structures import Period,Participation_Segment,Speaking_Turn,Utterance
+
+time_format="%H:%M:%S"
+buoyancy=False
+#These seem to be stable and homogeneous, they refer to column names in the CSV files
+speaker_label="Speaker"
+transcript_label="Transcript"
+timestamp_label="Time_Stamp"
+participation_types=['Whole class discussion', 
+         'Lecture', 
+         'Small group + Instructor',  
+         'Individual Work', 
+         'Pair Work', 
+         'Other']
+
+header= ['Speaker', 
+     'Time_Stamp', 
+     'Transcript', 
+     
+     'Turn-Taking Facilitation', 
+     'Metacognitive Modeling Questions', 
+     'Behavior Management Questions', 
+     'Teacher Open-Ended S/Q', 
+     'Teacher Close-Ended S/Q', 
+     'Student Open-Ended S/Q', 
+     'Student Close-Ended S/Q', 
+     'Student Close-Ended Response', 
+     'Student Open-Ended Response', 
+     'Student Explanation + Evidence', 
+    
+     'Whole class discussion', 
+     'Lecture', 
+     'Small group + Instructor', 
+     'Individual Work', 
+     'Pair Work', 
+     'Other']
+
+header2= ['Speaker', 
+     'Time_Stamp', 
+     'Transcript', 
+     
+     'Turn-Taking Facilitation', 
+     'Metacognitive Modeling Questions', 
+     'Behavior Management Questions', 
+     'Re-Voicing',
+     'Teacher Open-Ended S/Q', 
+     'Teacher Close-Ended S/Q', 
+     'Teacher Explanation + Evidence',
+     'Student Open-Ended S/Q', 
+     'Student Close-Ended S/Q', 
+     'Student Close-Ended Response', 
+     'Student Open-Ended Response', 
+     'Student Explanation + Evidence', 
+    
+     'Whole class discussion', 
+     'Lecture', 
+     'Small group + Instructor', 
+     'Individual Work', 
+     'Pair Work', 
+     'Other',
+     'Activity Description']
+
+utterance_types=['Turn-Taking Facilitation', 
+         'Metacognitive Modeling Questions', 
+         'Behavior Management Questions', 
+         'Teacher Open-Ended S/Q', 
+         'Teacher Close-Ended S/Q', 
+         
+         'Student Open-Ended S/Q', 
+         'Student Close-Ended S/Q', 
+         'Student Close-Ended Response', 
+         'Student Open-Ended Response', 
+         'Student Explanation + Evidence' ]
+
+utterance_types2=['Turn-Taking Facilitation', 
+         'Metacognitive Modeling Questions', 
+         'Behavior Management Questions', 
+         'Re-Voicing',
+         'Teacher Open-Ended S/Q', 
+         'Teacher Close-Ended S/Q', 
+         'Teacher Explanation + Evidence',
+         'Student Open-Ended S/Q', 
+         'Student Close-Ended S/Q', 
+         'Student Close-Ended Response', 
+         'Student Open-Ended Response', 
+         'Student Explanation + Evidence']
+
 
 
 def isTimeFormat(t_string,t_format):
@@ -27,22 +113,32 @@ def get_filenames_in_dir(dir_path,file_extension):
     print(filenames)
     return filenames
 
-def addheader_and_trimspaces(file_path_name,header):
+def addheader_and_trimspaces(file_path_name):
     lines=[]
     
     file_basename=os.path.basename(file_path_name)
     file_path=os.path.dirname(file_path_name)
     
+    use_header2=False
     
-    with open(file_path_name, encoding = 'unicode_escape') as csvfile:
+    with open(file_path_name, encoding = 'utf-8', errors="ignore") as csvfile:
         reader = csv.reader(csvfile, delimiter=",")
-        orig_header=next(reader)#we ignore the header in the file, and use our own
+        orig_header=next(reader)#we ignore the header in the file which is prone to typos, and use our own
+    
+        file_header=copy.copy(header)
+        for h in orig_header:
+            if h.find("oicing")>-1: 
+                use_header2=True
+                file_header=copy.copy(header2)
+                break
         
-        lines.append(header)
+        if not use_header2 and 'Activity Description' in orig_header: file_header.append('Activity Description')
+        lines.append(file_header)
         
         for row in reader:
             row_strip=[column_content.strip() for column_content in row]
             lines.append(row_strip)
+
     
     aux_filename=file_path+"/mod_"+file_basename
     with open(aux_filename,"w+",encoding = 'utf-8')  as csvfile:
@@ -57,29 +153,6 @@ def verify_speaker_format(speaker_string):
     if speaker_string.endswith(":"):
         speaker_string=speaker_string[:-1]
     return speaker_string
-
-            
-
-def get_utterance_type(line_dict):
-    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
-    return types
-    
-    
-def split_participation_segments(speaking_turns):
-    current_segment=Participation_Segment("no_segment")
-    segments=[]
-        
-    for (turn,participation_type) in speaking_turns:
-        if participation_type!=current_segment.participation_type:
-            
-            if current_segment.participation_type!="no_segment":segments.append(current_segment)
-            current_segment=Participation_Segment(participation_type,[turn])
-        
-        else:current_segment.speaking_turns.append(turn)
-    
-    segments.append(current_segment)
-    return segments
-
 
 def verify_timeformat(transcript_lines):
     time_format="%H:%M:%S"
@@ -101,18 +174,18 @@ def verify_timeformat(transcript_lines):
         
         line[timestamp_label]=l_time
 
+
+    
 def get_line_participation_type(line_dict):
     for part_type in participation_types:
         if line_dict[part_type]=="1" or line_dict[part_type]==1:
             return part_type
     return "none"
    
-def get_utterance_types(line_dict):
-    types=[utt_type for utt_type in utterance_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
-    return types
-    
-    
-def split_participation_segments(speaking_turns):
+def get_utterance_types(line_dict,utt_types):
+    return [utt_type for utt_type in utt_types if line_dict[utt_type]=="1" or line_dict[utt_type]==1]
+
+def split_participation_segments(speaking_turns,use_activity_descritions=False):
     current_segment=Participation_Segment("no_segment")
     segments=[]
         
@@ -121,17 +194,21 @@ def split_participation_segments(speaking_turns):
             
             if current_segment.participation_type!="no_segment":segments.append(current_segment)
             current_segment=Participation_Segment(participation_type,[turn])
-        
-        else:current_segment.speaking_turns.append(turn)
+            if use_activity_descritions: 
+                current_segment.activity_description=turn.activity_description
+                del turn.activity_description
+        else:
+            current_segment.speaking_turns.append(turn)
+            if use_activity_descritions: 
+                current_segment.activity_description.extend(turn.activity_description)
+                del turn.activity_description
     
     segments.append(current_segment)
     return segments
 
-
-
     
         
-def split_speaking_turns(transcript_lines,teacher_nickname):
+def split_speaking_turns(transcript_lines,teacher_nickname,testing=False):
     current_turn=Speaking_Turn("no_speaking_turn")
     current_participation_type="no_participation_type"
     speaking_turns=[]
@@ -141,32 +218,32 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
     
     line_number=0
     for line in transcript_lines:
+        line_number+=1
         
         l_speaker=verify_speaker_format(line[speaker_label])
         if l_speaker==teacher_nickname: l_speaker="Teacher"
         l_transcript=line[transcript_label]
-        if l_transcript=="": continue
+        if l_transcript=="": continue #if the transcript is empty, ignore it
         
 
         l_time=line[timestamp_label]
         if isTimeFormat(l_time,time_format): last_valid_time=l_time
         elif l_time!="":print ("invalid time at line:"+str(line_number)+"__"+l_time+"__")
 
-        
-        l_utterance_type=get_utterance_types(line)
+        if testing:l_utterance_type=[]
+        else:
+            if 'Re-Voicing' in line:l_utterance_type=get_utterance_types(line,utterance_types2)
+            else:l_utterance_type=get_utterance_types(line, utterance_types)
+                
         l_participation_type=get_line_participation_type(line)
         if l_participation_type=="none":
             print (str(line_number)+" no participation type")
             l_participation_type=current_participation_type
             
-        
         new_utterance=Utterance(line_number,l_transcript,l_utterance_type,l_time)
-        line_number+=1
-        
-                
+                        
         #IF SPEAKER CHANGES OR THE PARTICIPATION TYPE CHANGES, WE ASSUME A NEW SPEAKING TURN
         if (l_speaker!= current_turn.speaker_pseudonym and l_speaker!="") or l_participation_type!= current_participation_type:
-            
             
             if current_turn.speaker_pseudonym!= "no_speaking_turn": #If there is already a speaking turn  
                 current_turn.end_time=last_valid_time
@@ -178,10 +255,19 @@ def split_speaking_turns(transcript_lines,teacher_nickname):
                 l_speaker=current_turn.speaker_pseudonym
             
             current_turn=Speaking_Turn(l_speaker,[new_utterance])
+            
+            
+            if 'Activity Description' in line:
+                #print (line['Activity Description'])
+                if line['Activity Description']!="": current_turn.activity_description=[line['Activity Description']]
+                else:current_turn.activity_description=[]
             current_turn.initial_time=last_valid_time
             current_participation_type=l_participation_type
         
-        else:current_turn.utterances.append(new_utterance)
+        else:
+            current_turn.utterances.append(new_utterance)
+            if 'Activity Description' in line and line['Activity Description']!="":current_turn.activity_description.append(line['Activity Description'])
+       
                         
     current_turn.end_time=last_valid_time
     current_turn.do_time_calculations(time_format)
@@ -202,24 +288,68 @@ def divide_turns_by_interval(turn,interval_size=300):
 
     return range(initial_interval,end_interval+1)
         
-
+def process_file(file_name,csv_folder,json_folder,time_format,testing=False):
+    filename_base=os.path.basename(file_name)
+    
+    teacher_nick= filename_base[:-4].split("_")[1]
+    period_date= filename_base[:-4].split("_")[0]
+    extra_suffixes= "_".join(filename_base[:-4].split("_")[2:])
+    
+    if csv_folder!="":file_name_path=csv_folder+"/"+filename_base
+    else:file_name_path=file_name
+    
+    print("Processing: "+file_name_path)
+    
+    #This part creates an auxiliary file: mod_+originalfilename
+    aux_filename=addheader_and_trimspaces(file_name_path)
+    transcript_lines=[]
+    with open(aux_filename,encoding="utf-8") as csvfile:
+        csvreader = csv.DictReader(csvfile, delimiter=",")
+        for line in csvreader:
+            transcript_lines.append(line)   
+    if 'Activity Description' in line: 
+        use_activity_description=True
+        print("Using Activity Descriptions")
+    else: use_activity_description=False 
+    #Here we remove the auxiliary file
+    os.remove(aux_filename) 
+    
+    if not buoyancy:verify_timeformat(transcript_lines)
+    
+    turns=split_speaking_turns(transcript_lines,teacher_nick,testing)
+    print ("Turns split")
+    
+    class_segments=split_participation_segments(turns,use_activity_description)
+    for segment in class_segments:segment.calculate_duration(time_format)
+    print ("Participation Segments split")
+    
+    period_object=Period(teacher_nick,period_date,class_segments,time_format,filename_base) 
+    #period object needs to be created before the following because the period object triggers the calculation of turn durations         
+    for (turnx,_) in turns:
+        turnx.interval_5min=divide_turns_by_interval(turnx, 300)
+        turnx.interval_10min=divide_turns_by_interval(turnx, 600)
+        turnx.calculate_utterance_durations(time_format,period_object.initial_time)
+        
+    json_filename=json_folder+"/"+teacher_nick+"_"+period_date
+    if extra_suffixes!="":json_filename+="_"+extra_suffixes
+    json_filename+=".json"
+    period_object.save_to_json(json_filename)    
+    print("Created json file: "+json_filename+"\n")
+    return json_filename
+    
+    
 
 if __name__ == "__main__":
     
     live=True
     live=False
-    buoyancy=False
-    time_format="%H:%M:%S"
     
-    if live:
-        
+    if live:      
         import argparse
         parser = argparse.ArgumentParser()
-        
         parser.add_argument("-i","--inputdir", help="directory that contains all input CSV files. If not specified and not -f, then the current directory (where the script is located) is considered as input directory.")
         parser.add_argument("-o","--outputdir", help="directory where all JSON files will be placed. If not specified, the current directory is considered the output directory")
         parser.add_argument("-f","--file", help="input file. If specified, the script will only process a single file")
-        
         arguments= parser.parse_args()
         
         if arguments.file: #if single file is to be processed
@@ -245,129 +375,22 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="transcripts/official_transcripts/2_CSV_Files/2020"
-        json_folder="transcripts/official_transcripts/3_JSON_Files/2020"
+        csv_folder="transcripts/official_transcripts/2_CSV_Files/"
+        json_folder="transcripts/official_transcripts/3_JSON_Files/"
         filenames=get_filenames_in_dir(csv_folder,".csv")
-        
-        #=======================================================================
-        # csv_folder="transcripts/official_transcripts/2_CSV_Files/"
-        # json_folder="transcripts/official_transcripts/3_JSON_Files/"
-        # filenames=get_filenames_in_dir(csv_folder,".csv")
-        #=======================================================================
-        
-
-         
-        #=======================================================================
-        # filenames=["0205_Bill.csv","0205_Jeff.csv","0212_Caren.csv","0212_Evan.csv","0805_Tom.csv","190212_Sara_Per_2.csv","20190517_Stephanie_Per_3.csv"]
-        # filenames=["190429_Michelle_Per_5.csv","190501_Bonnie_Per_5.csv","190520_Sheila_Per_8.csv","20190502_Kim_Per6.csv","20190515_Bill_Per3.csv"]
-        # filenames=["20190508_Bonnie_per1.csv"]
-        #=======================================================================
-
-   
+        #filenames=["20200121_Evan_Pd7_8_Mixed_Andi_Tarang.csv"]
+                
+                
     if buoyancy:
         csv_folder="transcripts/"
         json_folder="transcripts/"
         filenames=["Buoyancy_Teacher.csv"]
         time_format="[%H:%M:%S;%f]"
 
-
-    
-    header= ['Speaker', 
-         'Time_Stamp', 
-         'Transcript', 
-         
-         'Turn-Taking Facilitation', 
-         'Metacognitive Modeling Questions', 
-         'Behavior Management Questions', 
-         'Teacher Open-Ended S/Q', 
-         'Teacher Close-Ended S/Q', 
-         'Student Open-Ended S/Q', 
-         'Student Close-Ended S/Q', 
-         'Student Close-Ended Response', 
-         'Student Open-Ended Response', 
-         'Student Explanation + Evidence', 
-        
-         'Whole class discussion', 
-         'Lecture', 
-         'Small group + Instructor', 
-         'Individual Work', 
-         'Pair Work', 
-         'Other']
-
-    utterance_types=['Turn-Taking Facilitation', 
-             'Metacognitive Modeling Questions', 
-             'Behavior Management Questions', 
-             'Teacher Open-Ended S/Q', 
-             'Teacher Close-Ended S/Q', 
-             
-             'Student Open-Ended S/Q', 
-             'Student Close-Ended S/Q', 
-             'Student Close-Ended Response', 
-             'Student Open-Ended Response', 
-             'Student Explanation + Evidence' ]
-    
-    participation_types=['Whole class discussion', 
-             'Lecture', 
-             'Small group + Instructor',  
-             'Individual Work', 
-             'Pair Work', 
-             'Other']
-    
-    speaker_label="Speaker"
-    transcript_label="Transcript"
-    timestamp_label="Time_Stamp"
-    
-    
-    
-    def process_file(file_name,header):
-        print ("Processing: "+file_name)
-        
-        filename_base=os.path.basename(file_name)
-        
-        teacher_nick= filename_base[:-4].split("_")[1]
-        period_date= filename_base[:-4].split("_")[0]
-        extra_suffixes= "_".join(filename_base[:-4].split("_")[2:])
-        
-        if csv_folder!="":file_name_path=csv_folder+"/"+filename_base
-        else:file_name_path=file_name
-        
-        print(file_name_path)
-        
-        #This part creates an auxiliary file: mod_+originalfilename
-        aux_filename=addheader_and_trimspaces(file_name_path,header)
-        transcript_lines=[]
-        with open(aux_filename,encoding="utf-8") as csvfile:
-            csvreader = csv.DictReader(csvfile, delimiter=",")
-            for line in csvreader:
-                transcript_lines.append(line)   
-        #Here we remove the auxiliary file
-        os.remove(aux_filename) 
-        
-        if not buoyancy:verify_timeformat(transcript_lines)
-        
-        turns=split_speaking_turns(transcript_lines,teacher_nick)
-        print ("Turns split")
-        
-        class_segments=split_participation_segments(turns)
-        for segment in class_segments:segment.calculate_duration(time_format)
-        print ("Participation Segments split")
-        
-        period_object=Period(teacher_nick,period_date,class_segments,time_format,filename_base) 
-        #period object needs to be created before the following because the period object triggers the calculation of turn durations         
-        for (turnx,_) in turns:
-            turnx.interval_5min=divide_turns_by_interval(turnx, 300)
-            turnx.interval_10min=divide_turns_by_interval(turnx, 600)
-            turnx.calculate_utterance_durations(time_format,period_object.initial_time)
-            
-        json_filename=json_folder+"/"+teacher_nick+"_"+period_date
-        if extra_suffixes!="":json_filename+="_"+extra_suffixes
-        json_filename+=".json"
-        period_object.save_to_json(json_filename)    
-        print("Created json file: "+json_filename+"\n")
-        
         
     for filename in filenames:
-        process_file(filename,header)
+        process_file(filename,csv_folder,json_folder,time_format)
+        #g=input("press something to continue")
             
                 
         
