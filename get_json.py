@@ -538,15 +538,15 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="transcripts/official_transcripts/2_CSV_Files/"
-        json_folder="transcripts/official_transcripts/3_JSON_Files/"
+        csv_folder="Data/2_CSV_Files/"
+        json_folder="Data/3_JSON_Files/"
         filenames=get_filenames_in_dir(csv_folder,".csv")
         #filenames=["20200121_Evan_Pd7_8_Mixed_Andi_Tarang.csv"]
                 
                 
     if buoyancy:
-        csv_folder="transcripts/"
-        json_folder="transcripts/"
+        csv_folder="Data/"
+        json_folder="Data/"
         filenames=["Buoyancy_Teacher.csv"]
         time_format="[%H:%M:%S;%f]"
 

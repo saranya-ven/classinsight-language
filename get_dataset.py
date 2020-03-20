@@ -173,25 +173,87 @@ def get_utterances_embeddings(utterances_list,embed_model):
     utts_embeddings=np.array(embed_model(only_utt_strings)) #note the np.array()
     return utts_embeddings
             
+            
+def save_dataframe_as_CSV(dataframe,csv_filepath):
+    '''
+    Having a dataframe that contains features, utterance types and sentence embeddings, create a CSV file with the format of the input files of UCSD
+    '''
+    csv_header= ['Speaker', 
+         'Time_Stamp', 
+         'Transcript', 
+         
+         'Turn-Taking Facilitation', 
+         'Metacognitive Modeling Questions', 
+         'Behavior Management Questions', 
+         'Teacher Open-Ended S/Q', 
+         'Teacher Close-Ended S/Q', 
+         'Student Open-Ended S/Q', 
+         'Student Close-Ended S/Q', 
+         'Student Close-Ended Response', 
+         'Student Open-Ended Response', 
+         'Student Explanation + Evidence', 
+        
+         'Whole class discussion', 
+         'Lecture', 
+         'Small group + Instructor', 
+         'Individual Work', 
+         'Pair Work', 
+         'Other']    
+    df_utt_types=["Utt_Turn_Taking","Metacognitive_Modelling","Utt_Behavior","Utt_Teacher_OpenQ","Utt_Teacher_CloseQ","Utt_Student_OpenQ","Utt_Student_CloseQ","Utt_Student_CloseR","Utt_Student_OpenR","Utt_Student_ExpEvi"]
+    df_part_types=["Part_Discussion","Part_Lecture","Part_Small_Group","Part_Individual","Part_Pairs","Part_Other"]
+
+    with open(csv_filepath,"w+",encoding = 'utf-8')  as output_csvfile:
+        writer=csv.writer(output_csvfile,delimiter=",")
+        writer.writerow(csv_header)
+        
+        speaker_index=dataframe.columns.get_loc("Speaker")
+        speakers=dataframe.iloc[:,speaker_index].values
+        
+        timestamp_index=dataframe.columns.get_loc("Time_Stamp")
+        timestamps=dataframe.iloc[:,timestamp_index].values
+        
+        utterance_index=dataframe.columns.get_loc("Utterance_String")
+        utterances=dataframe.iloc[:,utterance_index].values
+        
+        predictions=[]
+        for utt_type in df_utt_types:
+            u_type_index=dataframe.columns.get_loc(utt_type)
+            values=dataframe.iloc[:,u_type_index].values
+            values=["1" if x else " " for x in values]
+            predictions.append(values)
+        
+        participation_types=[]
+        for part_type in df_part_types:
+            p_type_index=dataframe.columns.get_loc(part_type)
+            values=dataframe.iloc[:,p_type_index].values
+            values=["1" if x else " " for x in values]
+            participation_types.append(values)
+        
+        for i, speaker in enumerate(speakers):
+            if timestamps[i]=="":speaker=""
+            row=[speaker,timestamps[i],utterances[i]]
+            for u_type in predictions:
+                row.append(u_type[i])
+            for p_type in participation_types:
+                row.append(p_type[i])
+            
+            writer.writerow(row)
+    print("File created:"+csv_filepath)
 
 if __name__ == "__main__":
     
-<<<<<<< HEAD
-    embedding_model="50"
-    embedding_dimensionality=50
-    
-    output_csv_filename="dataset_buoyancy_"+embedding_model+"dim.csv"
-    
-    #json_folder="transcripts/official_transcripts/3_JSON_Files/"
-    #datasets_folder="transcripts/official_transcripts/4_Datasets/"
-    
-    json_folder="/data/class-insight/3_JSON_Files/"
-    datasets_folder="/data/class-insight/4_Datasets/"
-    
-    outputfile_path=datasets_folder+output_csv_filename
-=======
+    json_folder="Data/3_JSON_Files/"
+    datasets_folder="Data/4_Datasets/"
+        
     os.environ['TFHUB_CACHE_DIR']='tf_cache'
->>>>>>> 0cd38536de84636dd51938e502131cf3abeb2f06
+    
+    json_files=get_filenames_in_dir(json_folder,".json")
+    all_periods=[]
+    for filename in json_files:
+        json_file=open(json_folder+filename)
+        json_str = json_file.read()
+        period_object = jsonpickle.decode(json_str)
+        all_periods.append(period_object)
     
     embedding_types=["20","50","128","250","512","512t"]
     for embedding_type in embedding_types:    
@@ -200,21 +262,8 @@ if __name__ == "__main__":
         print("Embedding model loaded: "+embedding_type)
         #Sometimes the cached models throw errors, particularly if the download process fails, then the 
         #corresponding files should be located and deleted, and then run the script again to try to download again the model
-    
-<<<<<<< HEAD
-
-    all_periods=[]
-    for filename in json_files:
-        json_file=open(json_folder+filename)
-        json_str = json_file.read()
-        period_object = jsonpickle.decode(json_str)
-        all_periods.append(period_object)
-=======
         if embedding_type=="512t":embedding_dimensionality=512
         else: embedding_dimensionality=int(embedding_type)
->>>>>>> 0cd38536de84636dd51938e502131cf3abeb2f06
-        
-        output_csv_filename="dataset_all_"+embedding_type+"dim.csv"
         
         headers=["Original_CSV_File","Utterance_String","Speaker","Time_Stamp",
                  "Utt_Turn_Taking","Metacognitive_Modelling","Utt_Behavior","Utt_Teacher_OpenQ","Utt_Teacher_CloseQ","Utt_Student_OpenQ","Utt_Student_CloseQ","Utt_Student_CloseR","Utt_Student_OpenR","Utt_Student_ExpEvi",
@@ -229,21 +278,10 @@ if __name__ == "__main__":
                  ]
         for i in range(embedding_dimensionality):
             headers.append("Embedding_"+str(i))
-            
-        #READ JSON FILES AND LOAD PERIODS
-        json_folder="transcripts/official_transcripts/3_JSON_Files/"
-        datasets_folder="transcripts/official_transcripts/4_Datasets/"
+        
+        output_csv_filename="dataset_all_"+embedding_type+"dim.csv"
         outputfile_path=datasets_folder+output_csv_filename
-        
-        json_files=get_filenames_in_dir(json_folder,".json")
-        
-        all_periods=[]
-        for filename in json_files:
-            json_file=open(json_folder+"/"+filename)
-            json_str = json_file.read()
-            period_object = jsonpickle.decode(json_str)
-            all_periods.append(period_object)
-        
+       
         #PROCESS EACH PERIOD AND ADD TO FILE
         with open(outputfile_path,"w+",encoding="utf-8") as output_csv_file:
             dataset_writer = csv.writer(output_csv_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)

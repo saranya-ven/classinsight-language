@@ -73,8 +73,8 @@ if __name__ == "__main__":
         print("Embedding Type:"+embedding_type+"\n")
         
         
-        if embedding_type=="no_embedding":dataset_path="transcripts/official_transcripts/4_Datasets/dataset_all_20dim.csv"
-        else:dataset_path="transcripts/official_transcripts/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
+        if embedding_type=="no_embedding":dataset_path="Data/4_Datasets/dataset_all_20dim.csv"
+        else:dataset_path="Data/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
         
         dataset = pd.read_csv(dataset_path) 
        

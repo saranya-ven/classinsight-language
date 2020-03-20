@@ -9,7 +9,7 @@ from sklearn.metrics import accuracy_score,f1_score,recall_score,precision_score
 from metric_data_plot import plot_metric_by_data_size 
 
 #dataset_path="transcripts/official_transcripts/4_Datasets/dataset_all_50dim.csv"
-dataset_path="/data/class-insight/4_Datasets/dataset_all_128dim.csv"
+dataset_path="Data/4_Datasets/dataset_all_128dim.csv"
 dataset = pd.read_csv(dataset_path) 
 
 headers=["Original_CSV_File","Utterance_String",

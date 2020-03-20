@@ -17,33 +17,12 @@ models_dict = {
     'embed_512t_model_url' : "https://tfhub.dev/google/universal-sentence-encoder-large/5" #trained with transformerhttps://tfhub.dev/google/universal-sentence-encoder/4
     }
 
-EMBEDDING_SIZE = 128
-    
-#get URL according to embedding size
-model_url = 'embed_{}_model_url'.format(EMBEDDING_SIZE)
-
-#load model
-embed = hub.load(models_dict[model_url])
-
-<<<<<<< HEAD
-def get_sentence_embeddings(sentences,EMBEDDING_SIZE):
-    """ Fetches n-dimensional embedding per input sentence from pretrained sentence embedding module.
-=======
 def load_embeddings_model(embed_size=128):
     '''Fetches an embedding model from tensorflow hub, where the type of model is given by the embed_size
->>>>>>> 0cd38536de84636dd51938e502131cf3abeb2f06
     Args:
         embed_size: dimensionality of the pretrained model, it can be a string, specially for 512t
     Returns:
-<<<<<<< HEAD
-        Numpy array of dimension (m,n) where m is the number of sentences in input, and n is the embedding dimension.
- 
-    """
-    
-    return np.array(embed(sentences))
-=======
         model object
-        
     In order to get embeddings:  embs= np.array(embed([Sentence1, Sentence2,...])), or use method below
     '''
     #get URL according to embedding size
@@ -51,8 +30,6 @@ def load_embeddings_model(embed_size=128):
     #load model
     embed = hub.load(models_dict[model_url])
     return embed
->>>>>>> 0cd38536de84636dd51938e502131cf3abeb2f06
-
 
 def get_sentence_embeddings(sentences,embedding_model):
     """ Fetches n-dimensional embedding per input sentence from pretrained sentence embedding module.
@@ -69,18 +46,7 @@ def get_sentence_embeddings(sentences,embedding_model):
 if __name__ == "__main__":
 
     #set embedding size(20/50/128/250/512/512t) 
-<<<<<<< HEAD
-    EMBEDDING_SIZE =128
-    
-    #get URL according to embedding size
-    model_url = 'embed_{}_model_url'.format(EMBEDDING_SIZE)
-
-    #load model
-    embed = hub.load(models_dict[model_url])
-    
-=======
     EMBEDDING_SIZE ="512t"
-    
     #get input sentences/read from file into list
     sentences_= ["Universal Sentence Encoder embeddings also support short paragraphs.",
                  "There is no hard limit on how long the paragraph is.", 
@@ -89,22 +55,11 @@ if __name__ == "__main__":
     os.environ['TFHUB_CACHE_DIR']='tf_cache'
     
     emb_model=load_embeddings_model(EMBEDDING_SIZE)
->>>>>>> 0cd38536de84636dd51938e502131cf3abeb2f06
+    print("Embedding model loaded")
+
     #get embeddings from loaded model
-    embeddings = np.array(emb_model(sentences_))
-    
+    embeddings = np.array(emb_model(sentences_))    
     print("Shape of output/embeddings array", embeddings.shape)
-<<<<<<< HEAD
-    
-    
-    
-    #get input sentences/read from file into list
-    sentences_= ["Universal Sentence Encoder embeddings also support short paragraphs.",
-                 "There is no hard limit on how long the paragraph is.", 
-                 "Roughly, the longer the more 'diluted' the embedding will be."]
-   
-    
-=======
->>>>>>> 0cd38536de84636dd51938e502131cf3abeb2f06
+
     for sent_emb in embeddings:
         print(sent_emb)
