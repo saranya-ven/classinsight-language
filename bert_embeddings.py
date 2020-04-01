@@ -20,7 +20,7 @@ def get_bert_embeddings(input_sentence, layer_num):
         layer_num : int between 0 and 12, 12 = final output layer embedding, 0-11 are hidden layer outputs
 
     Returns:
-        an embedding array of dimention (768,)
+        an embedding array of dimension (768,)
     """
     
     text = input_sentence
