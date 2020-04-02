@@ -3,7 +3,8 @@ Created on Mar 26, 2020
 
 Here we store all global variables accross the project and that might change from one environment to another
 '''
-project_folder="/Users/jesus/Documents/EclipseWorkspace/classinsight-language-git"
+#project_folder="/Users/jesus/Documents/EclipseWorkspace/classinsight-language-git"
+project_folder="../"
 
 data_folder=project_folder+"/Data"
 tf_cache_folder=project_folder+"/tf_cache"
