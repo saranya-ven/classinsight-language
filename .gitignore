@@ -7,6 +7,6 @@ Data/
 gorp_alignment/
 tf_cache/
 
-src/config.py
+#src/config.py
 
 *.pyc
