@@ -9,6 +9,7 @@ Having done a grid search to find the optimal configuration for each utterance t
 from sklearn.linear_model import LogisticRegression
 import pandas as pd
 import pickle
+import config as cfg
 
 if __name__ == "__main__":
 
@@ -24,7 +25,7 @@ if __name__ == "__main__":
                 "Utt_Student_ExpEvi"
                 ]
     
-     #Just for reference:
+    #Just for reference:
     headers=["Original_CSV_File","Utterance_String","Speaker","Time_Stamp",
     
             "Utt_Turn_Taking",#2
@@ -54,8 +55,11 @@ if __name__ == "__main__":
     
     output_filename="master_logistic_classifier.pkl"
     
+    saved_models_path=cfg.saved_models
+    datasets_path=cfg.datasets_folder
+    
     for utt_type in utt_types:
-        pickle_filepath="saved_models/best_"+utt_type+ ".pkl"
+        pickle_filepath=saved_models_path+"best_"+utt_type+ ".pkl"
         with open(pickle_filepath, 'rb') as file:
             (classifier,model_config)= pickle.load(file) #so far we are not using the classifier, as we retrain a classifier with the whole dataset
             
@@ -73,8 +77,8 @@ if __name__ == "__main__":
         print("Embedding Type:"+embedding_type+"\n")
         
         
-        if embedding_type=="no_embedding":dataset_path="Data/4_Datasets/dataset_all_20dim.csv"
-        else:dataset_path="Data/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
+        if embedding_type=="no_embedding":dataset_path=datasets_path+"dataset_all_20dim.csv"
+        else:dataset_path=datasets_path+"dataset_all_"+embedding_type+"dim.csv"
         
         dataset = pd.read_csv(dataset_path) 
        

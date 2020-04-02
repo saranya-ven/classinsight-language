@@ -45,11 +45,11 @@ for i in range(embedding_dimensionality):
 
 #x = dataset.iloc[:, 12:71].values
 x= dataset.iloc[:,12:71+embedding_dimensionality].values
-x = x*1
+#x = x*1
 
 for var_index in range(2,12):
     y = dataset.iloc[:, var_index].values 
-    y = y*1
+    #y = y*1
     xtrain, xtest, ytrain, ytest = train_test_split(x, y, test_size = 0.10, random_state = 0)
     
     classifier = LogisticRegression(random_state = 0, max_iter = 10000) 

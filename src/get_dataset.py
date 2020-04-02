@@ -9,6 +9,12 @@ import numpy as np
 
 from read_input_file import get_filenames_in_dir
 from sentence_embeddings import load_embeddings_model
+
+import nltk
+try:
+    nltk.data.find('tokenizers/punkt')
+except LookupError:
+    nltk.download('punkt')
 from nltk.tokenize import word_tokenize
 
 
@@ -242,15 +248,15 @@ def save_dataframe_as_CSV(dataframe,csv_filepath):
 
 if __name__ == "__main__":
     
-    json_folder="Data/3_JSON_Files/"
-    datasets_folder="Data/4_Datasets/"
-        
-    os.environ['TFHUB_CACHE_DIR']='tf_cache'
+    import config as cfg
+    json_folder=cfg.json_folder
+    datasets_folder=cfg.datasets_folder
+    os.environ['TFHUB_CACHE_DIR']=cfg.tf_cache_folder
     
     json_files=get_filenames_in_dir(json_folder,".json")
     all_periods=[]
     for filename in json_files:
-        json_file=open(json_folder+filename)
+        json_file=open(json_folder+"/"+filename)
         json_str = json_file.read()
         period_object = jsonpickle.decode(json_str)
         all_periods.append(period_object)
@@ -280,7 +286,7 @@ if __name__ == "__main__":
             headers.append("Embedding_"+str(i))
         
         output_csv_filename="dataset_all_"+embedding_type+"dim.csv"
-        outputfile_path=datasets_folder+output_csv_filename
+        outputfile_path=datasets_folder+"/"+output_csv_filename
        
         #PROCESS EACH PERIOD AND ADD TO FILE
         with open(outputfile_path,"w+",encoding="utf-8") as output_csv_file:

@@ -375,17 +375,17 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="Data/2_CSV_Files/"
-        json_folder="Data/3_JSON_Files/"
+        import config as cfg
+        csv_folder=cfg.csv_folder
+        json_folder=cfg.json_folder
+        
         filenames=get_filenames_in_dir(csv_folder,".csv")
         #filenames=["20200121_Evan_Pd7_8_Mixed_Andi_Tarang.csv"]
-                
-                
-    if buoyancy:
-        csv_folder="Data/"
-        json_folder="Data/"
-        filenames=["Buoyancy_Teacher.csv"]
-        time_format="[%H:%M:%S;%f]"
+                                
+        if buoyancy:
+            csv_folder=json_folder=cfg.data_folder
+            filenames=["Buoyancy_Teacher.csv"]
+            time_format="[%H:%M:%S;%f]"
 
         
     for filename in filenames:

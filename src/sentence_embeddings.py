@@ -1,9 +1,8 @@
 '''
-Taken from:
+Modified from:
     https://github.com/saranya132/pretrained_sent_embeddings
 '''
 
-import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np
 
@@ -52,7 +51,8 @@ if __name__ == "__main__":
                  "There is no hard limit on how long the paragraph is.", 
                  "Roughly, the longer the more 'diluted' the embedding will be."]
     import os
-    os.environ['TFHUB_CACHE_DIR']='tf_cache'
+    import config as cfg
+    os.environ['TFHUB_CACHE_DIR']=cfg.tf_cache_folder
     
     emb_model=load_embeddings_model(EMBEDDING_SIZE)
     print("Embedding model loaded")

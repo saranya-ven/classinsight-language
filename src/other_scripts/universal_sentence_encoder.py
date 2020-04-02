@@ -1,4 +1,6 @@
 """
+We don't use this script anymore. We use sentence_embeddings.py instead, which uses tensorflow 2.
+
 4 requirements for this script:
 
     Please install Tensforlow version 1.13 or above (but not Tensorflow 2) and Tensorflow-hub.
@@ -11,8 +13,6 @@
     4. Numpy
 
 """
-
-
 import tensorflow as tf
 import tensorflow_hub as hub
 import numpy as np

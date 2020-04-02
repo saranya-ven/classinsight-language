@@ -4,9 +4,8 @@ Having trained a logistic classifier with the optimal configuration for each utt
 - receive an unannotated CSV file
 - perform and output the classification scores of the new CSV file
 '''
-import os,csv
+import os,pickle, jsonpickle
 import pandas as pd
-import pickle,jsonpickle
 
 from read_input_file import process_file, get_filenames_in_dir
 from sentence_embeddings import load_embeddings_model
@@ -15,8 +14,9 @@ from get_dataset import extract_features_period,save_dataframe_as_CSV
 
 if __name__ == "__main__":
     
-    csv_folder="Data/2_CSV_Files/2020"#where the input files are
-    test_folder="Data/5_Test/"#where the outputs will be placed
+    import config as cfg
+    csv_folder=cfg.csv_folder+"/2020"#where the input files are
+    test_folder=cfg.test_folder#where the outputs will be placed
     
     time_format="%H:%M:%S"
     testing_filenames=get_filenames_in_dir(csv_folder,".csv")
@@ -44,7 +44,7 @@ if __name__ == "__main__":
     #LOADING THE EMBEDDING MODELS IS COSTLY AND PRONE TO ERRORS, SO WE CAN LOAD THEM JUST ONCE FOR ALL THE INPUT FILES
     #Sometimes the cached models throw errors, particularly if a model is downloaded again (not sure why) and the download process fails, then the 
     #corresponding files in the cache should be located and deleted, and then run the script again to try to download again the model
-    os.environ['TFHUB_CACHE_DIR']='tf_cache'
+    os.environ['TFHUB_CACHE_DIR']=cfg.tf_cache_folder
     embedding_models={}
     for embedding_type in necessary_embeddings:
         print ("\nLoading embedding model:"+embedding_type)
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             
             #USE NOEMB, ONLY EMB OR EMB+FEAT
             if conf_emb_type=="no_embedding":       selected_x_dims=list(range(last_class_dim+1,first_embedding_dim))
-            elif conf_emb_type.find("_onlyemb")>-1: selected_x_dims=list(range(first_embedding_dim,len(dataset.columns)))
+            elif conf_emb_type.find("_onlyemb")>-1: selected_x_dims=list(range(first_embedding_dim,len(dataframe.columns)))
             else:                                   selected_x_dims=list(range(last_class_dim+1,len(dataframe.columns)))
             
             x=dataframe.iloc[:,selected_x_dims].values

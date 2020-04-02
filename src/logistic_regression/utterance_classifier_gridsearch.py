@@ -5,9 +5,7 @@ Main process to classify utterances in the transcripts, assuming several dataset
 import pandas as pd 
 import numpy as np 
 import matplotlib.pyplot as plt 
-from collections import Counter
 import pickle
-import sklearn
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
@@ -32,6 +30,7 @@ def train_test_validation_split(xs,ys,testval_size,rm_state=0):
     return xtrain,xval,xtest,ytrain,yval,ytest
 
 def report_best_performance(var_name,y_all,y_test,y_predicted,threshold): 
+    from collections import Counter
     print("\n",var_name)
     counter=Counter(y_all)
     print (counter)
@@ -102,8 +101,8 @@ if __name__ == "__main__":
     
     for embedding_type in embedding_types:
         
-        if embedding_type=="no_embedding":dataset_path="Data/4_Datasets/dataset_all_20dim.csv"
-        else:dataset_path="Data/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
+        if embedding_type=="no_embedding":dataset_path="../../Data/4_Datasets/dataset_all_20dim.csv"
+        else:dataset_path="../../Data/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
         
         dataset = pd.read_csv(dataset_path) 
         

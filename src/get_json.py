@@ -1,6 +1,6 @@
 '''
 Created on January 10, 2020
-Last Modified: Feb 3 2020
+Last Modified: March 26 2020
 
 @author: jzc1104
 
@@ -11,7 +11,7 @@ Apart from avoiding importing the Structures in data_structures.py, the method i
 
 '''
 
-import os,csv,jsonpickle,json,copy
+import os,csv,copy
 from datetime import datetime
 
 
@@ -505,7 +505,7 @@ def process_file(file_name,csv_folder,json_folder,time_format,testing=False):
 if __name__ == "__main__":
     
     live=True
-    live=False
+    #live=False
     
     if live:      
         import argparse
@@ -538,17 +538,18 @@ if __name__ == "__main__":
             json_folder=dirname
         
     else:
-        csv_folder="Data/2_CSV_Files/"
-        json_folder="Data/3_JSON_Files/"
+        import config as cfg
+        csv_folder=cfg.csv_folder
+        json_folder=cfg.json_folder
+        
         filenames=get_filenames_in_dir(csv_folder,".csv")
         #filenames=["20200121_Evan_Pd7_8_Mixed_Andi_Tarang.csv"]
-                
-                
-    if buoyancy:
-        csv_folder="Data/"
-        json_folder="Data/"
-        filenames=["Buoyancy_Teacher.csv"]
-        time_format="[%H:%M:%S;%f]"
+                                
+        if buoyancy:
+            csv_folder=json_folder=cfg.data_folder
+            filenames=["Buoyancy_Teacher.csv"]
+            time_format="[%H:%M:%S;%f]"
+
 
         
     for filename in filenames:

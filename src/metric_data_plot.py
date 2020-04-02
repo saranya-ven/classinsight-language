@@ -1,7 +1,8 @@
 import numpy as np 
 import matplotlib.pyplot as plt 
+import config as cfg
 
-def plot_metric_by_data_size(metric_label, metric_values, n_data,class_label, directory_path="plots/performance_vs_datasize"):
+def plot_metric_by_data_size(metric_label, metric_values, n_data,class_label, directory_path=cfg.plots_folder+"/performance_vs_datasize"):
     plt.figure(metric_label)
     plt.plot(n_data, metric_values, marker='.', label=class_label)
     plt.title("Performance Vs Training Data Size")
@@ -10,7 +11,7 @@ def plot_metric_by_data_size(metric_label, metric_values, n_data,class_label, di
     plt.legend()
     plt.savefig(directory_path+'/percent_data_'+metric_label+'_plot.png')
 
-def plot_metric_by_data_size_vs_embedding_type(metric_label,category_label, metric_values, n_data ,embedding_type, directory_path="plots/performance_vs_datasize"):
+def plot_metric_by_data_size_vs_embedding_type(metric_label,category_label, metric_values, n_data ,embedding_type, directory_path=cfg.plots_folder+"/performance_vs_datasize"):
     '''
     Plots a given metric vs datasize, and each time it is called, a new line is added corresponding to a new type embedding
     This method exploits the fact that using plt.figure() we can add stuff to the same figure as long as the name is the same
@@ -23,7 +24,7 @@ def plot_metric_by_data_size_vs_embedding_type(metric_label,category_label, metr
     plt.legend()
     plt.savefig(directory_path+'/percent_data_'+metric_label+"_"+category_label+'_plot.png')
     
-def get_bar_plots_grouped_embeddingtype(metric_label,all_data,group_labels,embedding_types,folder_path="plots"):
+def get_bar_plots_grouped_embeddingtype(metric_label,all_data,group_labels,embedding_types,folder_path=cfg.plots_folder):
     #width=0.5 #use this when using onlyembeddings, to get thinner bars and more space
     width = 0.1  # the width of the bars #this is when not using onlyembeddings
     

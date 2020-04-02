@@ -2,13 +2,11 @@
 Having trained a model and saved it as pickle file, we load them and analyze its output
 '''
 
-from utterance_classifier import train_test_validation_split,report_best_performance
+from logistic_regression.utterance_classifier_gridsearch import train_test_validation_split,report_best_performance
 from evaluation import report_precision_recall_fscore
 
 import pandas as pd
-import numpy as np
 import pickle
-from sklearn.metrics import f1_score
 
 def show_false_negatives(x,y,classifier): 
     l=0  
@@ -82,7 +80,7 @@ def show_true_negatives(x,y,classifier):
 
 if __name__ == "__main__":
     
-    pickle_filepath="saved_models/best_Utt_Student_OpenQ.pkl"
+    pickle_filepath="../saved_models/best_Utt_Student_OpenQ.pkl"
     with open(pickle_filepath, 'rb') as file:
         (classifier,model_config)= pickle.load(file)
         
@@ -96,8 +94,8 @@ if __name__ == "__main__":
     print("\nInterest Variable: "+variable_name)
     print("Embedding Type:"+embedding_type+"\n")
     
-    if embedding_type=="no_embedding":dataset_path="Data/4_Datasets/dataset_all_20dim.csv"
-    else:dataset_path="Data/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
+    if embedding_type=="no_embedding":dataset_path="../Data/4_Datasets/dataset_all_20dim.csv"
+    else:dataset_path="../Data/4_Datasets/dataset_all_"+embedding_type+"dim.csv"
     
     dataset = pd.read_csv(dataset_path) 
     
