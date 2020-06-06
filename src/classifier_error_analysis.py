@@ -8,20 +8,23 @@ from evaluation import report_precision_recall_fscore
 import pandas as pd
 import pickle
 
+def print_utterance_prediction(x_elem,y_predicted,y_gold):
+    print (x_elem[1],
+           "\n\t"+x_elem[0],
+           "\n\tTeacher:     ",x_elem[14],
+           "\n\tStudentNamed:",x_elem[42],
+           "\n\tStudentNext: ",x_elem[10],
+           "\n\tGold:        ",y_gold,
+           "\n\tPredicted:   ",y_predicted)
+
 def show_false_negatives(x,y,classifier): 
     l=0  
     print("FALSE NEGATIVES")
     for x_elem,y_gold in zip(x,y):
-        prediction=classifier.predict([x_elem[2:]])
+        prediction=classifier.predict([x_elem[4:]])
         
         if prediction!=y_gold and y_gold==True:
-            print (x_elem[1],
-                   "\n\t"+x_elem[0],
-                   "\n\tTeacher:     ",x_elem[2],
-                   "\n\tStudentNamed:",x_elem[40],
-                   "\n\tStudentNext: ",x_elem[8],
-                   "\n\tExpected:    ",y_gold,
-                   "\n\tPredicted:   ",prediction[0])
+            print_utterance_prediction(x_elem,prediction[0],y_gold)
             l+=1
     print(l)
 
@@ -29,16 +32,10 @@ def show_false_positives(x,y,classifier):
     l=0  
     print("FALSE POSITIVES")
     for x_elem,y_gold in zip(x,y):
-        prediction=classifier.predict([x_elem[2:]])
+        prediction=classifier.predict([x_elem[4:]])
         
         if prediction!=y_gold and y_gold==False:
-            print (x_elem[1],
-                   "\n\t"+x_elem[0],
-                   "\n\tTeacher:     ",x_elem[2],
-                   "\n\tStudentNamed:",x_elem[40],
-                   "\n\tStudentNext: ",x_elem[8],
-                   "\n\tExpected:    ",y_gold,
-                   "\n\tPredicted:   ",prediction[0])
+            print_utterance_prediction(x_elem,prediction[0],y_gold)
             l+=1
     print(l)
 
@@ -46,16 +43,10 @@ def show_true_positives(x,y,classifier):
     l=0  
     print("TRUE POSITIVES")
     for x_elem,y_gold in zip(x,y):
-        prediction=classifier.predict([x_elem[2:]])
+        prediction=classifier.predict([x_elem[4:]])
         
         if prediction==y_gold and y_gold==True:
-            print (x_elem[1],
-                   "\n\t"+x_elem[0],
-                   "\n\tTeacher:     ",x_elem[2],
-                   "\n\tStudentNamed:",x_elem[40],
-                   "\n\tStudentNext: ",x_elem[8],
-                   "\n\tExpected:    ",y_gold,
-                   "\n\tPredicted:   ",prediction[0])
+            print_utterance_prediction(x_elem,prediction[0],y_gold)
             l+=1
     print(l)
 
@@ -64,16 +55,10 @@ def show_true_negatives(x,y,classifier):
     l=0 
     print("TRUE NEGATIVES") 
     for x_elem,y_gold in zip(x,y):
-        prediction=classifier.predict([x_elem[2:]])
+        prediction=classifier.predict([x_elem[4:]])
         
         if prediction==y_gold and y_gold==False:
-            print (x_elem[1],
-                   "\n\t"+x_elem[0],
-                   "\n\tTeacher:     ",x_elem[2],
-                   "\n\tStudentNamed:",x_elem[40],
-                   "\n\tStudentNext: ",x_elem[8],
-                   "\n\tExpected:    ",y_gold,
-                   "\n\tPredicted:   ",prediction[0])
+            print_utterance_prediction(x_elem,prediction[0],y_gold)
             l+=1
     print(l)
 
@@ -99,18 +84,18 @@ if __name__ == "__main__":
     
     dataset = pd.read_csv(dataset_path) 
     
-    headers=["Original_CSV_File","Utterance_String",
+    headers=["Original_CSV_File","Utterance_String","Speaker","Time_Stamp",
     
-            "Utt_Turn_Taking",#2
-            "Metacognitive_Modelling",#3
-            "Utt_Behavior",#4
-            "Utt_Teacher_OpenQ",#5
-            "Utt_Teacher_CloseQ",#6
-            "Utt_Student_OpenQ",#7
-            "Utt_Student_CloseQ",#8
-            "Utt_Student_CloseR",#9
-            "Utt_Student_OpenR",#10
-            "Utt_Student_ExpEvi",#11
+            "Utt_Turn_Taking",#4
+            "Metacognitive_Modelling",#5
+            "Utt_Behavior",#6
+            "Utt_Teacher_OpenQ",#7
+            "Utt_Teacher_CloseQ",#8
+            "Utt_Student_OpenQ",#9
+            "Utt_Student_CloseQ",#10
+            "Utt_Student_CloseR",#11
+            "Utt_Student_OpenR",#12
+            "Utt_Student_ExpEvi",#13
             
             "Speaker_teacher","Speaker_student","Speaker_other","Previous_speaker_teacher","Previous_speaker_student","Previous_speaker_other","Previous_speaker_none",
             "Next_speaker_teacher","Next_speaker_student","Next_speaker_other","Next_speaker_none",
@@ -131,8 +116,8 @@ if __name__ == "__main__":
     #shuffle the data, there are some differences in performance... maybe due to differences in split in test/train
     dataset = dataset.sample(frac=1,random_state=seed_all).reset_index(drop=True)
     
-    #HERE WE WANT TO KEEP TRACK OF THE ORIGINAL UTTERANCES AND THEIR SOURCE FILES, THAT-S WHY WE KEEP THE FIRST 2 DIMENSIONS
-    x_dims=[0,1]
+    #HERE WE WANT TO KEEP TRACK OF THE ORIGINAL UTTERANCES AND THEIR SOURCE FILES, THAT-S WHY WE KEEP THE FIRST 4 DIMENSIONS
+    x_dims=[0,1,2,3]
     #USE NOEMB, ONLY EMB OR EMB+FEAT
     if label_feats=="no_embedding":       selected_x_dims=list(range(last_class_dim+1,first_embedding_dim))
     elif label_feats.find("_onlyemb")>-1: selected_x_dims=list(range(first_embedding_dim,len(headers)))
@@ -156,11 +141,11 @@ if __name__ == "__main__":
     #===============================================================
     
     #get predictions in validation set
-    y_pred_proba_val = classifier.predict_proba(xval[:,2:])
-    y_pred_val = classifier.predict(xval[:,2:])
+    y_pred_proba_val = classifier.predict_proba(xval[:,4:])
+    y_pred_val = classifier.predict(xval[:,4:])
     #get predictions in testing set
-    y_pred_proba_test=classifier.predict_proba(xtest[:,2:])
-    y_pred_test=classifier.predict(xtest[:,2:])
+    y_pred_proba_test=classifier.predict_proba(xtest[:,4:])
+    y_pred_test=classifier.predict(xtest[:,4:])
     #We are only interested in the probability of the given class, not in the alternative (!given_class)
     # keep probabilities for the positive outcome only
     y_pred_proba_val = y_pred_proba_val[:, 1]

@@ -255,7 +255,9 @@ if __name__ == "__main__":
     
     json_files=get_filenames_in_dir(json_folder,".json")
     all_periods=[]
+    print("Loading JSON Files")
     for filename in json_files:
+        print(filename)
         json_file=open(json_folder+"/"+filename)
         json_str = json_file.read()
         period_object = jsonpickle.decode(json_str)

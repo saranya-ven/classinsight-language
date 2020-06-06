@@ -108,16 +108,16 @@ if __name__ == "__main__":
         
         headers=["Original_CSV_File","Utterance_String","Speaker","Time_Stamp",
         
-                "Utt_Turn_Taking",#2
-                "Metacognitive_Modelling",#3
-                "Utt_Behavior",#4
-                "Utt_Teacher_OpenQ",#5
-                "Utt_Teacher_CloseQ",#6
-                "Utt_Student_OpenQ",#7
-                "Utt_Student_CloseQ",#8
-                "Utt_Student_CloseR",#9
-                "Utt_Student_OpenR",#10
-                "Utt_Student_ExpEvi",#11
+                "Utt_Turn_Taking",#4
+                "Metacognitive_Modelling",#5
+                "Utt_Behavior",#6
+                "Utt_Teacher_OpenQ",#7
+                "Utt_Teacher_CloseQ",#8
+                "Utt_Student_OpenQ",#9
+                "Utt_Student_CloseQ",#10
+                "Utt_Student_CloseR",#11
+                "Utt_Student_OpenR",#12
+                "Utt_Student_ExpEvi",#13
                 
                 "Speaker_teacher","Speaker_student","Speaker_other","Previous_speaker_teacher","Previous_speaker_student","Previous_speaker_other","Previous_speaker_none",
                 "Next_speaker_teacher","Next_speaker_student","Next_speaker_other","Next_speaker_none",

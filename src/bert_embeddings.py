@@ -1,4 +1,7 @@
 #pip install torch, transformers, numpy
+#in mac os there seems to be a problem with the tokenizers while installing transformers:
+#https://github.com/huggingface/transformers/issues/2831
+
 from transformers import BertTokenizer, BertModel, BertConfig
 import torch
 import numpy as np
